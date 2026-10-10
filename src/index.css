@@ -88,18 +88,18 @@ body {
   }
 }
 
-/* Pagina del juego: aqui si se puede hacer scroll y seleccionar texto */
+/* Pagina del juego: el documento scrollea normal, tambien con el dedo */
 html.landing,
 html.landing body,
 html.landing #root {
   height: auto;
   min-height: 100%;
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 html.landing body {
-  overflow-x: hidden;
-  overflow-y: auto;
-  touch-action: auto;
+  touch-action: pan-y;
   user-select: auto;
   -webkit-user-select: auto;
 }

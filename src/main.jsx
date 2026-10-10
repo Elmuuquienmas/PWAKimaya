@@ -10,6 +10,7 @@ const params = new URLSearchParams(window.location.search)
 const isInstalled =
   window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true
 const Root = isInstalled || params.has('ip') || params.has('app') ? App : LandingPage
+if (Root === LandingPage) document.documentElement.classList.add('landing')
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

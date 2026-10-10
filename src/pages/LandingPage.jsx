@@ -89,11 +89,11 @@ function SectionTitle({ eyebrow, title, text }) {
 
 function Characters() {
   return (
-    <section id="personajes" className="scroll-mt-14 px-6 py-24 sm:py-32">
+    <section id="personajes" className="scroll-mt-14 px-5 py-16 sm:px-6 sm:py-32">
       <SectionTitle eyebrow="Personajes" title="Dos formas de cruzar el bosque." text="Cambia entre Falin y Mia en cualquier momento. Cada uno resuelve el camino a su manera." />
       <div className="mx-auto mt-16 grid max-w-5xl gap-8 md:grid-cols-2">
-        {CHARACTERS.map((c, i) => (
-          <Reveal key={c.id} delay={i * 150}>
+        {CHARACTERS.map((c) => (
+          <Reveal key={c.id} className="min-w-0">
             <CharacterCard character={c} />
           </Reveal>
         ))}
@@ -108,11 +108,11 @@ function CharacterCard({ character: c }) {
     <article
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      className="neu relative overflow-hidden rounded-[36px] p-8"
+      className="neu relative w-full min-w-0 overflow-hidden rounded-[36px] p-6 sm:p-8"
     >
       <div className={`absolute inset-x-0 top-0 h-48 bg-gradient-to-b ${c.glow} to-transparent`} />
       <div className="neu-inset relative mx-auto flex h-44 items-end justify-center overflow-hidden rounded-[28px]">
-        <Sprite src={hover ? c.run : c.idle} frames={hover ? 8 : 10} duration={hover ? 0.6 : 1.2} scale={3.2} className="-mb-24" />
+        <Sprite src={hover ? c.run : c.idle} frames={hover ? 8 : 10} duration={hover ? 0.6 : 1.2} scale={2.2} className="-mb-16" />
       </div>
       <p className={`mt-7 text-sm font-extrabold uppercase tracking-[0.25em] ${c.color}`}>{c.breed}</p>
       <h3 className="mt-1 text-5xl font-black tracking-tight">{c.name}</h3>
@@ -176,9 +176,9 @@ function Features() {
   return (
     <section className="px-6 py-24 sm:py-32">
       <SectionTitle eyebrow="Todo en uno" title="Más que un control." />
-      <div className="mx-auto mt-16 grid max-w-5xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mx-auto mt-16 grid min-w-0 max-w-5xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {FEATURES.map(({ Icon, title, text }, i) => (
-          <Reveal key={title} delay={(i % 3) * 100}>
+          <Reveal key={title} className="min-w-0">
             <div className="neu h-full rounded-[28px] p-7">
               <span className="neu-inset text-accent flex h-12 w-12 items-center justify-center rounded-2xl">
                 <Icon size={22} />
