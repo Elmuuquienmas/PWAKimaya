@@ -16,19 +16,21 @@ export const ControllerPage = () => {
 
   if (!ip) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-6 text-center bg-gray-900/80">
-        <h1 className="text-3xl font-black mb-4">Kimaya Companion App</h1>
-        <p className="mb-6 opacity-80">Escanea el QR del juego o ingresa la IP local de tu PC.</p>
-        <input 
-          type="text" 
-          placeholder="Ej: 192.168.1.15" 
-          value={manualIp}
-          onChange={(e) => setManualIp(e.target.value)}
-          className="p-3 text-xl rounded-lg text-black text-center mb-4 w-64"
-        />
-        <button onClick={handleManualConnect} className="px-6 py-3 bg-blue-600 rounded-full font-bold shadow-lg active:scale-95 transition-transform">
-          Conectar Mando
-        </button>
+      <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+        <div className="bg-gray-950/80 border border-white/15 rounded-2xl px-8 py-8 max-w-md">
+          <h1 className="text-3xl font-black mb-3">Kimaya Companion App</h1>
+          <p className="mb-6 opacity-80">Escanea el QR del juego o escribe la IP de tu PC. Historial y Lore se pueden ver sin conectar.</p>
+          <input 
+            type="text" 
+            placeholder="Ej: 192.168.1.15" 
+            value={manualIp}
+            onChange={(e) => setManualIp(e.target.value)}
+            className="p-3 text-xl rounded-lg bg-white text-gray-900 text-center mb-4 w-full border border-gray-300"
+          />
+          <button onClick={handleManualConnect} className="px-6 py-3 bg-blue-600 text-white rounded-full font-bold shadow-lg active:scale-95 transition-transform">
+            Conectar Mando
+          </button>
+        </div>
       </div>
     )
   }
