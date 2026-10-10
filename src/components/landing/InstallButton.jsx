@@ -3,7 +3,7 @@ import { Gamepad2, X } from 'lucide-react'
 import { useInstallPrompt } from '../../hooks/useInstallPrompt'
 
 export function InstallButton({ size = 'md', className = '' }) {
-  const { installed, isIos, isInApp, openInChrome } = useInstallPrompt()
+  const { installed, isIos } = useInstallPrompt()
   const [helpOpen, setHelpOpen] = useState(false)
   const sizes = size === 'lg' ? 'px-8 py-4 text-lg' : 'px-6 py-3 text-sm'
 
@@ -19,11 +19,9 @@ export function InstallButton({ size = 'md', className = '' }) {
     <span className="inline-flex flex-col items-center">
       <button
         type="button"
-        data-install
         onClick={() => {
-          if (window.__kimayaPrompt) return
-          if (isInApp) openInChrome()
-          else if (isIos) setHelpOpen(true)
+          if (window.installKimaya?.()) return
+          if (isIos) setHelpOpen(true)
         }}
         className={`bg-accent inline-flex items-center gap-2 rounded-full font-extrabold text-white shadow-lg transition-transform active:scale-95 ${sizes} ${className}`}
       >
@@ -34,7 +32,7 @@ export function InstallButton({ size = 'md', className = '' }) {
   )
 }
 
-export function InstallHelp({ onClose }) {
+function InstallHelp({ onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6 backdrop-blur-sm" onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()} className="neu text-ink relative w-full max-w-sm rounded-[28px] p-6 text-left">

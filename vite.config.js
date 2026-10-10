@@ -9,11 +9,11 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon-64.png', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'promo/*.png'],
       manifest: {
-        id: '/',
         name: 'Kimaya Companion App',
         short_name: 'Kimaya',
         description: 'Controlador interactivo y Companion App para Kimaya: El Bosque del Eco',
-        // ?app=1 hace que abra el control y no la pagina del juego
+        // El id y la pagina de inicio tienen que ser el mismo, si no Android no instala y solo recarga el sitio.
+        id: '/?app=1',
         start_url: '/?app=1',
         scope: '/',
         theme_color: '#262a31',

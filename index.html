@@ -24,18 +24,18 @@
         window.__kimayaInstalled = true
         window.dispatchEvent(new Event('kimaya-install'))
       })
-      document.addEventListener('click', function (event) {
-        var button = event.target.closest && event.target.closest('[data-install]')
+      // Se llama desde el boton, en el mismo toque. No cambia la pagina.
+      window.installKimaya = function () {
         var promptEvent = window.__kimayaPrompt
-        if (!button || !promptEvent) return
-        event.stopPropagation()
+        if (!promptEvent) return false
         window.__kimayaPrompt = null
         promptEvent.prompt()
         promptEvent.userChoice.then(function (choice) {
           if (choice.outcome === 'accepted') window.__kimayaInstalled = true
           window.dispatchEvent(new Event('kimaya-install'))
         })
-      }, true)
+        return true
+      }
       if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js')
     </script>
   </head>

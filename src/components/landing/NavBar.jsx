@@ -13,7 +13,7 @@ export function NavBar() {
   const theme = useGameStore((s) => s.theme)
   const toggleTheme = useGameStore((s) => s.toggleTheme)
   const [scrolled, setScrolled] = useState(false)
-  const { installed, isInApp, openInChrome } = useInstallPrompt()
+  const { installed } = useInstallPrompt()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -55,11 +55,7 @@ export function NavBar() {
           ) : (
             <button
               type="button"
-              data-install
-              onClick={() => {
-                if (window.__kimayaPrompt) return
-                if (isInApp) openInChrome()
-              }}
+              onClick={() => window.installKimaya?.()}
               className="bg-accent rounded-full px-4 py-1.5 text-xs font-extrabold text-white"
             >
               Instalar
