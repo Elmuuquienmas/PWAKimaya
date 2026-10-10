@@ -1,65 +1,73 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { ScrollText, Smartphone, Trophy } from 'lucide-react'
+import { useGameStore } from './store/gameStore'
+import { useGameConnection } from './hooks/useGameConnection'
+import { TopBar } from './components/TopBar'
+import { SideDrawer, EdgeHandle } from './components/SideDrawer'
+import { FeedbackOverlay } from './components/FeedbackOverlay'
 import { ControllerPage } from './pages/ControllerPage'
 import { LorePage } from './pages/LorePage'
 import { StatsPage } from './pages/StatsPage'
-import { Gamepad2, ScrollText, Trophy } from 'lucide-react'
-import { useGameStore } from './store/gameStore'
-import { useGameConnection } from './hooks/useGameConnection'
 
 function App() {
-  const [currentTab, setCurrentTab] = useState('controller')
-  const { activeCharacter, isHit } = useGameStore()
-  
-  // Inicializa la conexion (se encarga del WS internamente)
   useGameConnection()
 
-  // Tema dinamico basado en el personaje seleccionado
-  const themeClasses = activeCharacter === 'falin' 
-    ? 'bg-yellow-900 border-yellow-500 text-yellow-100' 
-    : 'bg-pink-900 border-pink-500 text-pink-100'
+  const theme = useGameStore((s) => s.theme)
+  const character = useGameStore((s) => s.activeCharacter)
+  const gameState = useGameStore((s) => s.gameState)
+  const [drawer, setDrawer] = useState(null)
 
-  const highlightClass = activeCharacter === 'falin' ? 'bg-yellow-500' : 'bg-pink-500'
+  // Lore e Historial solo se abren en el menu o en pausa
+  const menusAllowed = gameState !== 'playing'
 
-  // Efecto de parpadeo rojo si recibe daño
-  const hitOverlay = isHit ? 'bg-red-500/50 absolute inset-0 z-50 pointer-events-none transition-colors duration-100' : ''
+  useEffect(() => {
+    const root = document.documentElement
+    root.classList.toggle('dark', theme === 'dark')
+    root.dataset.character = character
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#262a31' : '#e6ebf1')
+  }, [theme, character])
 
   return (
-    <div className={`w-screen h-screen flex flex-col ${themeClasses} transition-colors duration-500 relative overflow-hidden`}>
-      {/* Overlay de Daño */}
-      <div className={hitOverlay}></div>
+    <div className="flex h-full w-full flex-col overflow-hidden">
+      <TopBar />
 
-      {/* Contenido Principal */}
-      <div className="flex-1 overflow-y-auto">
-        {currentTab === 'controller' && <ControllerPage />}
-        {currentTab === 'lore' && <LorePage />}
-        {currentTab === 'stats' && <StatsPage />}
-      </div>
+      <main className="relative min-h-0 flex-1">
+        <ControllerPage />
+      </main>
 
-      {/* Barra de Navegacion Bottom */}
-      <div className="h-16 bg-gray-950 flex justify-around items-center border-t-2 border-gray-800 pb-safe">
-        <button 
-          onClick={() => setCurrentTab('controller')}
-          className={`flex flex-col items-center p-2 rounded-xl transition-all ${currentTab === 'controller' ? highlightClass + ' text-black' : 'text-gray-400'}`}
-        >
-          <Gamepad2 size={24} />
-          <span className="text-xs font-bold mt-1">Mando</span>
-        </button>
-        
-        <button 
-          onClick={() => setCurrentTab('stats')}
-          className={`flex flex-col items-center p-2 rounded-xl transition-all ${currentTab === 'stats' ? highlightClass + ' text-black' : 'text-gray-400'}`}
-        >
-          <Trophy size={24} />
-          <span className="text-xs font-bold mt-1">Historial</span>
-        </button>
+      {menusAllowed && (
+        <>
+          <EdgeHandle side="left" label="Lore" icon={ScrollText} onClick={() => setDrawer('lore')} />
+          <EdgeHandle side="right" label="Historial" icon={Trophy} onClick={() => setDrawer('stats')} />
+        </>
+      )}
 
-        <button 
-          onClick={() => setCurrentTab('lore')}
-          className={`flex flex-col items-center p-2 rounded-xl transition-all ${currentTab === 'lore' ? highlightClass + ' text-black' : 'text-gray-400'}`}
-        >
-          <ScrollText size={24} />
-          <span className="text-xs font-bold mt-1">Lore</span>
-        </button>
+      <SideDrawer
+        side="left"
+        title="Lore del bosque"
+        icon={ScrollText}
+        open={menusAllowed && drawer === 'lore'}
+        onClose={() => setDrawer(null)}
+      >
+        <LorePage />
+      </SideDrawer>
+
+      <SideDrawer
+        side="right"
+        title="Historial"
+        icon={Trophy}
+        open={menusAllowed && drawer === 'stats'}
+        onClose={() => setDrawer(null)}
+      >
+        <StatsPage />
+      </SideDrawer>
+
+      <FeedbackOverlay />
+
+      <div className="bg-surface fixed inset-0 z-[60] hidden flex-col items-center justify-center gap-3 text-center portrait:max-md:flex">
+        <Smartphone size={44} className="text-accent rotate-90" />
+        <p className="font-extrabold">Gira tu celular</p>
+        <p className="text-muted text-sm">El control se usa en horizontal</p>
       </div>
     </div>
   )

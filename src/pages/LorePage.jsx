@@ -1,63 +1,43 @@
-import { useEffect, useState } from 'react'
-import { ScrollText, WifiOff } from 'lucide-react'
+import { WifiOff } from 'lucide-react'
+import { getLore } from '../services/api'
+import { useApiList } from '../hooks/useApiList'
+import { useOnline } from '../hooks/useOnline'
 
-export const LorePage = () => {
-  const [lore, setLore] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [offline, setOffline] = useState(false)
+export function LorePage() {
+  const { data: lore, loading, error } = useApiList(getLore)
+  const online = useOnline()
 
-  useEffect(() => {
-    // Si estamos offline y falla la carga limpia, mostraremos el estado de caché
-    if (!navigator.onLine) setOffline(true)
+  if (loading) return <p className="text-muted py-8 text-center text-sm">Desempolvando tomos…</p>
 
-    window.addEventListener('offline', () => setOffline(true))
-    window.addEventListener('online', () => setOffline(false))
-
-    fetch('/api/lore.json')
-      .then(res => res.json())
-      .then(data => {
-        setLore(data)
-        setLoading(false)
-      })
-      .catch(err => {
-        console.error("Fallo red, intentando leer caché...", err)
-        setLoading(false)
-      })
-
-    return () => {
-      window.removeEventListener('offline', () => setOffline(true))
-      window.removeEventListener('online', () => setOffline(false))
-    }
-  }, [])
+  if (error) {
+    return (
+      <div className="text-muted flex flex-col items-center gap-2 py-8 text-center text-sm">
+        <WifiOff />
+        No hay lore guardado todavía. Ábrelo una vez con internet para que quede en el celular.
+      </div>
+    )
+  }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-black flex items-center gap-2">
-          <ScrollText className="text-blue-400" /> Lore Desbloqueado
-        </h2>
-        {offline && (
-          <span className="flex items-center gap-1 text-xs text-red-400 font-bold bg-red-900/50 px-2 py-1 rounded-full">
-            <WifiOff size={12} /> Offline Mode
-          </span>
-        )}
-      </div>
-
-      {loading ? (
-        <div className="text-center opacity-50">Desempolvando tomos...</div>
-      ) : (
-        <div className="grid gap-6">
-          {lore.map(doc => (
-            <div key={doc.id_lore} className="bg-gray-800/60 p-5 rounded-lg border-l-4 border-blue-500 shadow-md">
-              <h3 className="text-xl font-bold mb-2 text-blue-100">{doc.title}</h3>
-              <p className="text-sm opacity-90 leading-relaxed">{doc.content}</p>
-              <div className="text-[10px] opacity-40 mt-4 text-right">
-                Descubierto: {new Date(doc.unlocked_at).toLocaleDateString()}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+    <div className="space-y-4">
+      {!online && <OfflineNote />}
+      {lore.map((doc) => (
+        <article key={doc.id_lore} className="neu-sm rounded-2xl p-4">
+          <h3 className="text-accent font-extrabold">{doc.title}</h3>
+          <p className="mt-2 text-sm leading-relaxed opacity-90">{doc.content}</p>
+          <p className="text-muted mt-3 text-right text-[10px]">
+            Descubierto el {new Date(doc.unlocked_at).toLocaleDateString()}
+          </p>
+        </article>
+      ))}
     </div>
+  )
+}
+
+function OfflineNote() {
+  return (
+    <p className="neu-inset text-muted flex items-center gap-2 rounded-2xl px-3 py-2 text-xs font-bold">
+      <WifiOff size={14} /> Sin conexión, mostrando lo guardado
+    </p>
   )
 }
