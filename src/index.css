@@ -1,6 +1,9 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-falin: #eab308;
+  --color-mia: #ec4899;
+}
 
 @layer base {
   body {
