@@ -9,7 +9,7 @@ La idea es que el celular sirva para dos cosas:
 
 El juego esta en otro repo: https://github.com/Thekiidd/proyecto-uni. Aqui solo va la PWA.
 
-App publicada: (pendiente, se sube a Cloudflare Pages)
+App publicada: https://kimaya-companion.pages.dev
 
 ## Que pide la actividad y como lo cubrimos
 
