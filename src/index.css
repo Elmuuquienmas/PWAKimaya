@@ -108,6 +108,19 @@ html.landing {
   scroll-behavior: smooth;
 }
 
+/* iPhone no gira la PWA instalada. Se dibuja el control de lado para llenar la pantalla. */
+.force-landscape {
+  position: fixed;
+  top: 0;
+  left: 100vw;
+  width: 100vh;
+  height: 100vw;
+  width: 100dvh;
+  height: 100dvw;
+  transform: rotate(90deg);
+  transform-origin: top left;
+}
+
 .pixel {
   image-rendering: pixelated;
 }

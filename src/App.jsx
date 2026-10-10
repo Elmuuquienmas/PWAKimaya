@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ScrollText, Smartphone, Trophy } from 'lucide-react'
+import { ScrollText, Trophy } from 'lucide-react'
 import { useGameStore } from './store/gameStore'
 import { useGameConnection } from './hooks/useGameConnection'
 import { useThemeEffect } from './hooks/useThemeEffect'
@@ -23,7 +23,7 @@ function App() {
   const menusAllowed = gameState !== 'playing'
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden">
+    <div className={`flex w-full flex-col overflow-hidden ${portraitPhone ? 'force-landscape' : 'relative h-full'}`}>
       <TopBar />
 
       <main className="relative min-h-0 flex-1">
@@ -58,14 +58,7 @@ function App() {
       </SideDrawer>
 
       <FeedbackOverlay />
-
-      <div className={`bg-surface fixed inset-0 z-[60] flex-col items-center justify-center gap-3 px-8 text-center ${portraitPhone ? 'flex' : 'hidden'}`}>
-        <Smartphone size={44} className="text-accent rotate-90" />
-        <p className="font-extrabold">Gira tu celular</p>
-        <p className="text-muted text-sm">El control se usa en horizontal</p>
-        <InstallBanner className="mt-4" />
-      </div>
-      <InstallBanner className={portraitPhone ? 'hidden' : ''} />
+      <InstallBanner />
     </div>
   )
 }
@@ -76,8 +69,11 @@ function usePortraitPhone() {
   useEffect(() => {
     const update = () => {
       const narrow = Math.min(window.innerWidth, window.innerHeight) < 768
-      setPortrait(narrow && window.innerHeight > window.innerWidth)
-      document.documentElement.style.height = `${window.innerHeight}px`
+      const portrait = narrow && window.innerHeight > window.innerWidth
+      setPortrait(portrait)
+      if (portrait && screen.orientation?.lock) {
+        screen.orientation.lock('landscape').catch(() => {})
+      }
     }
     update()
     window.addEventListener('resize', update)
@@ -85,7 +81,6 @@ function usePortraitPhone() {
     return () => {
       window.removeEventListener('resize', update)
       window.removeEventListener('orientationchange', update)
-      document.documentElement.style.height = ''
     }
   }, [])
 
