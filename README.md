@@ -46,7 +46,7 @@ Para conectarse, el juego muestra un QR en la pantalla de la PC. El QR abre la a
 https://<url-de-la-app>/?ip=192.168.1.20&port=8080
 ```
 
-Si no se puede escanear, tambien se puede escribir la IP a mano.
+Si la app ya esta abierta, el QR tambien se escanea desde adentro: el boton de Escanear prende la camara en el centro del control. Si no se puede escanear, se puede escribir la IP a mano.
 
 Al entrar, el jugador pone su nombre. Con eso buscamos sus datos en la base (y si es nuevo lo damos de alta).
 
@@ -251,16 +251,46 @@ Lo que manda el juego al terminar un nivel:
 ```
 
 Mientras terminamos de crear el proyecto en Supabase, las pantallas leen `public/api/stats.json` y `public/api/lore.json` para poder probar.
-## El control
+## Diseño de la interfaz
 
-El control va siempre en horizontal. Tiene cruceta, A, B, X, Y, Select y Start, y cambia segun el personaje:
+Usamos un estilo neumorfico (botones que parecen salir o hundirse en la pantalla con sombras suaves). Hay modo claro y modo oscuro, se cambia con el boton del sol/luna y se queda guardado. Si nunca se ha cambiado, toma el del celular.
 
-- **Falin** (amarillo): botones extra de Empujar y Salto impulsado.
-- **Mia** (rosa): botones extra de Olfato y Espacio estrecho.
+La pantalla va siempre en horizontal y esta dividida asi:
 
-Cuando el personaje recibe daño la pantalla parpadea en rojo, y tambien hay aviso cuando tiene poca vida o mata a un enemigo. Para la presentacion pusimos botones de prueba que simulan esos eventos sin tener el juego abierto.
+- **Arriba:** nombre de la app, estado de la conexion, vida, personaje activo, modo demo y el cambio de tema.
+- **Centro:** el control. Cruceta a la izquierda, A/B/X/Y a la derecha y Select/Start abajo.
+- **Lados:** Lore sale de la izquierda e Historial de la derecha, como paneles que se deslizan. Solo aparecen cuando el juego esta en el menu o en pausa. Mientras se juega se esconden y queda solo el control.
 
-Lore e Historial son menus desplegables que solo se pueden abrir cuando el juego esta en el menu o en pausa. Mientras se juega solo se ve el control.
+```mermaid
+flowchart LR
+  lore["Panel Lore (sale de la izquierda)"]
+  control["Control al centro"]
+  hist["Panel Historial (sale de la derecha)"]
+  lore --- control --- hist
+```
+
+Mientras no hay conexion con el juego, el centro se pone en negro y el control se ve transparente encima. Al presionar Escanear se prende la camara detras del control, con un recuadro para apuntar al QR. En cuanto lo lee se conecta y el control se vuelve normal.
+
+```mermaid
+stateDiagram-v2
+  [*] --> Negro: no hay conexion
+  Negro --> Camara: presiona Escanear
+  Camara --> Negro: cancelar
+  Camara --> Conectando: leyo el QR
+  Negro --> Conectando: escribio la IP
+  Conectando --> Control: el juego respondio
+  Conectando --> Negro: cancelar
+  Control --> Conectando: se cayo la conexion
+```
+
+Cada personaje cambia el color y los botones extra:
+
+- **Falin** (amarillo): Empujar e Impulso.
+- **Mia** (rosa): Olfato y Escabullir.
+
+Cuando el personaje recibe daño la pantalla parpadea en rojo, con poca vida se pone un borde rojo que late, y cuando vence a un enemigo sale un aviso arriba. El boton del matraz abre el modo demo, que simula todo esto (y la conexion) sin tener el juego abierto, para la presentacion.
+
+### Estados del juego
 
 ```mermaid
 stateDiagram-v2
@@ -323,27 +353,37 @@ Si se va el internet no sale la pantalla de error del navegador. Sale una pantal
 
 ```
 src/
-  pages/       ControllerPage, LorePage, StatsPage
-  hooks/       useGameConnection (WebSocket y lectura del QR)
-  store/       gameStore (Zustand: personaje, vida, conexion)
-  services/    llamadas a Supabase (en proceso)
+  pages/        ControllerPage (centro), LorePage y StatsPage (paneles)
+  components/   Gamepad, SideDrawer, CameraFeed, TopBar, DemoPanel, FeedbackOverlay, ManualIpDialog
+  hooks/        useGameConnection (WebSocket), useApiList, useOnline
+  store/        gameStore (Zustand: tema, personaje, vida, estado del juego, conexion)
+  services/     api.js (datos) y qr.js (leer la IP del QR)
 public/
-  api/         JSON de prueba
+  api/          JSON de prueba
 ```
 
 ```mermaid
 flowchart TB
-  App --> store[gameStore]
+  App --> TopBar
   App --> ControllerPage
-  App --> LorePage
-  App --> StatsPage
-  ControllerPage --> hook[useGameConnection]
-  hook --> ws[WebSocket del juego]
-  hook --> store
-  LorePage --> api[services]
+  App --> SideDrawer
+  SideDrawer --> LorePage
+  SideDrawer --> StatsPage
+  ControllerPage --> Gamepad
+  ControllerPage --> CameraFeed
+  CameraFeed --> qr[services/qr]
+  LorePage --> api[services/api]
   StatsPage --> api
   api --> db[(Supabase)]
+  App --> hook[useGameConnection]
+  hook --> ws[WebSocket del juego]
+  hook --> store[gameStore]
+  Gamepad --> store
 ```
+
+El WebSocket se abre una sola vez en `App`. Los botones no lo tocan directo, mandan sus datos con la funcion `send` que queda guardada en el store.
+
+Para leer el QR usamos la libreria `qr-scanner`.
 
 ## Como correrlo
 
@@ -365,15 +405,14 @@ Hecho:
 
 - [x] Proyecto con Vite, React, Tailwind y vite-plugin-pwa
 - [x] Control con cruceta y botones, con vibracion al presionar
-- [x] Lectura de la IP desde el QR o escribiendola
-- [x] Pantallas de lore e historial con datos de prueba
-- [x] Colores segun el personaje y parpadeo al recibir daño
+- [x] Escaneo del QR con la camara dentro de la app, o escribir la IP
+- [x] Paneles laterales de lore e historial, solo en menu o pausa
+- [x] Diseño neumorfico con modo claro y oscuro
+- [x] Colores y botones extra segun el personaje
+- [x] Avisos de daño, poca vida y enemigo vencido, con modo demo
 - [x] Diseño de la base de datos
 
 Pendiente:
 
 - [ ] Crear el proyecto en Supabase y conectar las pantallas
-- [ ] Menus desplegables solo en pausa o menu
-- [ ] Botones extra de Falin y Mia
-- [ ] Pantalla de sin conexion
-- [ ] Botones de prueba para daño, poca vida y enemigo derrotado
+- [ ] Conexion segura (`wss://`) con el juego. Como la app esta en https, el navegador no deja abrir un `ws://` normal
