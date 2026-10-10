@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { Leaf, Moon, Sun } from 'lucide-react'
 import { useGameStore } from '../../store/gameStore'
 import { useInstallPrompt } from '../../hooks/useInstallPrompt'
-import { InstallHelp } from './InstallButton'
 
 const LINKS = [
   { href: '#personajes', label: 'Personajes' },
@@ -14,9 +13,7 @@ export function NavBar() {
   const theme = useGameStore((s) => s.theme)
   const toggleTheme = useGameStore((s) => s.toggleTheme)
   const [scrolled, setScrolled] = useState(false)
-  const [helpOpen, setHelpOpen] = useState(false)
-  const [waiting, setWaiting] = useState(false)
-  const { installed, isIos, install, openInChrome } = useInstallPrompt()
+  const { installed, isInApp, openInChrome } = useInstallPrompt()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -58,27 +55,18 @@ export function NavBar() {
           ) : (
             <button
               type="button"
-              onClick={async () => {
-                const result = await install()
-                if (result === 'chrome') {
-                  openInChrome()
-                  return
-                }
-                if (result === 'accepted' || result === 'dismissed') return
-                if (result === 'wait' && !waiting) {
-                  setWaiting(true)
-                  return
-                }
-                setHelpOpen(true)
+              data-install
+              onClick={() => {
+                if (window.__kimayaPrompt) return
+                if (isInApp) openInChrome()
               }}
               className="bg-accent rounded-full px-4 py-1.5 text-xs font-extrabold text-white"
             >
-              {waiting ? 'Otra vez' : 'Instalar'}
+              Instalar
             </button>
           )}
         </div>
       </div>
-      {helpOpen && <InstallHelp isIos={isIos} onClose={() => setHelpOpen(false)} onChrome={openInChrome} />}
     </nav>
   )
 }

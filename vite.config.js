@@ -19,7 +19,6 @@ export default defineConfig({
         theme_color: '#262a31',
         background_color: '#262a31',
         display: 'standalone',
-        orientation: 'landscape',
         lang: 'es',
         icons: [
           {

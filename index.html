@@ -11,7 +11,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Kimaya Companion</title>
     <script>
-      // Se guarda el aviso de Chrome antes de que cargue React, si no el boton llega tarde.
+      // En Android, prompt() tiene que llamarse en el mismo toque, sin esperar a React.
       window.__kimayaPrompt = null
       window.__kimayaInstalled = false
       window.addEventListener('beforeinstallprompt', function (event) {
@@ -24,13 +24,19 @@
         window.__kimayaInstalled = true
         window.dispatchEvent(new Event('kimaya-install'))
       })
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.addEventListener('controllerchange', function () {
-          if (sessionStorage.getItem('kimaya-sw-ready')) return
-          sessionStorage.setItem('kimaya-sw-ready', '1')
-          location.reload()
+      document.addEventListener('click', function (event) {
+        var button = event.target.closest && event.target.closest('[data-install]')
+        var promptEvent = window.__kimayaPrompt
+        if (!button || !promptEvent) return
+        event.stopPropagation()
+        window.__kimayaPrompt = null
+        promptEvent.prompt()
+        promptEvent.userChoice.then(function (choice) {
+          if (choice.outcome === 'accepted') window.__kimayaInstalled = true
+          window.dispatchEvent(new Event('kimaya-install'))
         })
-      }
+      }, true)
+      if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js')
     </script>
   </head>
   <body>
