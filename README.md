@@ -58,18 +58,73 @@ stateDiagram-v2
 
 En SinPartida y en EnPausa se pueden abrir Lore e Historial. En Jugando solo el mando. En Desconectado aparece la pantalla de sin conexión, pero los menús siguen disponibles con lo último que se guardó en caché, y desde ahí se puede volver a escribir la IP o escanear el QR del juego.
 
-## API
+## Base de datos
 
-La base está en Supabase (PostgreSQL). La PWA habla con la API REST que Supabase ya expone. No hace falta un backend nuestro para las listas.
+La base vive en Supabase (PostgreSQL). El juego y la PWA usan la misma API REST. No hay un servidor propio en medio.
 
-### Tablas
+Lo que hoy el juego guarda solo en memoria (`GameData`: personaje, nivel, puntaje, monedas y vidas) es lo que va a quedar escrito aquí cuando termine un nivel o se acabe la partida. Los mundos coinciden con las escenas que ya tiene el juego: la aldea y tres niveles.
 
-| Tabla | Para qué |
-| --- | --- |
-| `players` | Nombre de quien juega |
-| `sessions` | Una fila por partida: personaje, puntaje, tiempo y fecha |
-| `lore` | Textos del bosque |
-| `lore_unlocks` | Qué textos ya descubrió cada jugador |
+```mermaid
+erDiagram
+  players ||--o{ sessions : juega
+  players ||--o{ lore_unlocks : descubre
+  characters ||--o{ sessions : usa
+  levels ||--o{ sessions : ocurre_en
+  levels ||--o{ lore : guarda
+  lore ||--o{ lore_unlocks : se_desbloquea
+
+  players {
+    uuid id PK
+    text name
+    timestamptz created_at
+  }
+  characters {
+    text id PK
+    text name
+    text role
+    text description
+  }
+  levels {
+    text id PK
+    text name
+    text scene_name
+    int order_index
+  }
+  sessions {
+    uuid id PK
+    uuid player_id FK
+    text character_id FK
+    text level_id FK
+    int score
+    int coins
+    int lives_left
+    int time_played
+    text result
+    timestamptz session_date
+  }
+  lore {
+    text id PK
+    text level_id FK
+    text title
+    text content
+  }
+  lore_unlocks {
+    text lore_id PK
+    uuid player_id PK
+    timestamptz unlocked_at
+  }
+```
+
+| Tabla | Quién la llena | Qué representa en el juego |
+| --- | --- | --- |
+| `players` | La PWA, cuando la persona escribe su nombre | El jugador de esa partida |
+| `characters` | Datos fijos. Falin y Mia | El personaje elegido en el menú |
+| `levels` | Datos fijos. Aldea y tres niveles | `Village_Scene`, `Level_01`, `Level_02`, `Level_03` |
+| `sessions` | El juego, al completar un nivel o al perder | Puntaje, monedas, vidas, tiempo y nivel donde quedó |
+| `lore` | Datos fijos. Los textos del bosque | Notas que se pueden encontrar en un nivel |
+| `lore_unlocks` | El juego, al encontrar una nota | Qué textos ya leyó esa persona |
+
+`characters` y `levels` no cambian durante la partida. Existen para que la app pueda pintar listas (personajes y mundos) sin hardcodearlas. `sessions` y `lore_unlocks` sí crecen cada vez que se juega.
 
 ```sql
 create table players (
@@ -78,17 +133,37 @@ create table players (
   created_at timestamptz not null default now()
 );
 
+create table characters (
+  id text primary key,
+  name text not null,
+  role text not null,
+  description text not null
+);
+
+create table levels (
+  id text primary key,
+  name text not null,
+  scene_name text not null,
+  order_index int not null,
+  description text not null default ''
+);
+
 create table sessions (
   id uuid primary key default gen_random_uuid(),
   player_id uuid not null references players(id),
-  character_used text not null check (character_used in ('falin', 'mia')),
+  character_id text not null references characters(id),
+  level_id text not null references levels(id),
   score int not null default 0,
+  coins int not null default 0,
+  lives_left int not null default 0,
   time_played int not null default 0,
+  result text not null check (result in ('nivel_completado', 'game_over')),
   session_date timestamptz not null default now()
 );
 
 create table lore (
   id text primary key,
+  level_id text references levels(id),
   title text not null,
   content text not null
 );
@@ -101,29 +176,120 @@ create table lore_unlocks (
 );
 ```
 
-Para la demo de la escuela, la lectura con la llave pública (`anon`) queda permitida. La llave de servicio no se pone en el celular.
+Datos fijos con los que arranca la base:
 
-### Llamadas que hace la app
+```sql
+insert into characters (id, name, role, description) values
+  ('falin', 'Falin', 'fisico', 'Empuja objetos y usa un salto impulsado.'),
+  ('mia', 'Mia', 'tactico', 'Entra en espacios estrechos y revela secretos con el olfato.');
 
-Buscar a la persona por nombre:
+insert into levels (id, name, scene_name, order_index, description) values
+  ('village', 'Aldea', 'Village_Scene', 0, 'Donde empieza el recorrido.'),
+  ('level_01', 'Nivel 1', 'Level_01', 1, 'Primera zona del bosque.'),
+  ('level_02', 'Nivel 2', 'Level_02', 2, 'El bosque se cierra.'),
+  ('level_03', 'Nivel 3', 'Level_03', 3, 'El ultimo tramo.');
+
+insert into lore (id, level_id, title, content) values
+  ('doc_01', 'level_01', 'El Despertar del Bosque', 'Mucho antes de que el mal corrompiera estas tierras, el eco del bosque guiaba a los perdidos.'),
+  ('doc_02', 'level_02', 'Nota del Explorador Perdido', 'Si alguien encuentra esto, sigan el camino de las piedras amarillas.');
+```
+
+Para la demo de la escuela, la lectura con la llave pública (`anon`) queda permitida. La llave de servicio no se pone en el celular. Cada petición lleva estas cabeceras:
+
+```
+apikey: <anon key>
+Authorization: Bearer <anon key>
+Content-Type: application/json
+```
+
+## Cómo se usa esa base
+
+```mermaid
+sequenceDiagram
+  participant Cel as PWA
+  participant DB as Supabase
+  participant PC as Juego
+
+  Cel->>DB: busca o crea al jugador por nombre
+  DB-->>Cel: player_id
+  Cel->>PC: por el WebSocket manda el player_id
+  Note over PC: Guarda ese id junto al GameData
+  PC->>DB: al terminar un nivel o al perder, inserta una session
+  PC->>DB: al encontrar una nota, inserta un lore_unlock
+  Cel->>DB: pide la lista de partidas, de mundos y de lore
+  DB-->>Cel: JSON
+  Note over Cel: Pinta las listas en los menus
+```
+
+La PWA no espera a que el juego esté encendido para leer. Por eso el historial y el lore se consultan por HTTPS a Supabase. El juego solo escribe cuando pasa algo dentro de la partida.
+
+| Momento | Quién | Qué hace | Tabla |
+| --- | --- | --- | --- |
+| La persona escribe su nombre en el celular | PWA | Busca por nombre. Si no existe, lo crea | `players` |
+| Se conecta el mando | PWA | Manda `{ "event": "identify", "player_id": "..." }` por el WebSocket | ninguna |
+| Se completa un nivel (`LevelCompleteUI`) | Juego | Inserta la partida con `result = nivel_completado` | `sessions` |
+| Se pierden las vidas (`GameOverUI`) | Juego | Inserta la partida con `result = game_over` | `sessions` |
+| Se encuentra una nota | Juego | Inserta el desbloqueo. Si ya existía, no duplica | `lore_unlocks` |
+| Se abre Historial, en pausa o antes de jugar | PWA | Pide las partidas de esa persona y arma la lista | `sessions` |
+| Se abre Lore | PWA | Pide los textos ya desbloqueados y arma la lista | `lore_unlocks` + `lore` |
+| Se quiere ver el recorrido | PWA | Pide los mundos ordenados y arma la lista | `levels` |
+
+Una fila de `sessions` sale de lo que el juego ya tiene en memoria en ese instante: `score`, `coins`, `lives`, el nivel actual y el personaje elegido. `time_played` son los segundos desde que empezó esa partida hasta el momento de guardar. El detalle de cómo lo manda Unity está en `README_UNITY_DEV.md`.
+
+### Endpoints que consume la PWA
+
+La base de la URL es `https://<proyecto>.supabase.co`. Todas las respuestas de abajo son listas JSON. La interfaz recorre ese arreglo y pinta una tarjeta por elemento. No hay datos fijos en el componente.
+
+Buscar a la persona:
 
 `GET /rest/v1/players?name=eq.<nombre>&select=*`
 
-Crearla si no está:
+Crearla si no está. La respuesta trae el `id` que después viaja al juego:
 
 `POST /rest/v1/players`
 
-Historial, de la más nueva a la más vieja:
+```json
+{ "name": "Felipe" }
+```
 
-`GET /rest/v1/sessions?player_id=eq.<id>&select=*&order=session_date.desc`
+Historial, de la más nueva a la más vieja. Cada objeto de la lista muestra personaje, mundo, puntaje, monedas, vidas y si ganó el nivel o perdió:
 
-Lore que ya desbloqueó, con el título y el texto:
+`GET /rest/v1/sessions?player_id=eq.<id>&select=score,coins,lives_left,time_played,result,session_date,characters(name),levels(name)&order=session_date.desc`
+
+Mundos, en el orden del juego:
+
+`GET /rest/v1/levels?select=id,name,description,order_index&order=order_index.asc`
+
+Lore ya descubierto, con título y texto:
 
 `GET /rest/v1/lore_unlocks?player_id=eq.<id>&select=unlocked_at,lore(id,title,content)`
 
-Esas respuestas son listas y la interfaz las pinta tal cual llegan. Hoy, mientras no existe el proyecto de Supabase, las pantallas leen `public/api/stats.json` y `public/api/lore.json` con la misma forma, para poder probar sin la nube.
+### Lo que escribe el juego
 
-El juego de PC escribe en las mismas tablas cuando termina un nivel. Esa parte se explica en `README_UNITY_DEV.md`.
+Al cerrar un nivel o al perder, el juego hace `POST /rest/v1/sessions` con el cuerpo que corresponde a esa partida:
+
+```json
+{
+  "player_id": "uuid-que-mando-la-pwa",
+  "character_id": "falin",
+  "level_id": "level_01",
+  "score": 4500,
+  "coins": 12,
+  "lives_left": 2,
+  "time_played": 320,
+  "result": "nivel_completado"
+}
+```
+
+Al encontrar una nota:
+
+`POST /rest/v1/lore_unlocks`
+
+```json
+{ "lore_id": "doc_01", "player_id": "uuid-que-mando-la-pwa" }
+```
+
+Hoy, mientras no existe el proyecto de Supabase, las pantallas leen `public/api/stats.json` y `public/api/lore.json` con la misma idea de lista, para poder probar sin la nube.
 
 ## Mando en tiempo real
 
