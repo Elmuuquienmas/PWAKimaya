@@ -251,9 +251,6 @@ Lo que manda el juego al terminar un nivel:
 ```
 
 Mientras terminamos de crear el proyecto en Supabase, las pantallas leen `public/api/stats.json` y `public/api/lore.json` para poder probar.
-
-Lo que tiene que hacer el equipo de Unity para guardar en la base esta en [README_UNITY_DEV.md](README_UNITY_DEV.md).
-
 ## El control
 
 El control va siempre en horizontal. Tiene cruceta, A, B, X, Y, Select y Start, y cambia segun el personaje:
