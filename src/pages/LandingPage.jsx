@@ -7,6 +7,7 @@ import { Hero } from '../components/landing/Hero'
 import { Reveal } from '../components/landing/Reveal'
 import { Sprite } from '../components/landing/Sprite'
 import { InstallButton } from '../components/landing/InstallButton'
+import { InstallBanner } from '../components/landing/InstallBanner'
 import { Gamepad } from '../components/Gamepad'
 
 const CHARACTERS = [
@@ -68,9 +69,10 @@ export function LandingPage() {
       <Features />
       <HowItWorks />
       <InstallSection />
-      <footer className="text-muted px-6 py-10 text-center text-xs">
+      <footer className="text-muted px-6 py-10 pb-28 text-center text-xs sm:pb-10">
         Kimaya: El Bosque del Eco · Proyecto integrador
       </footer>
+      <InstallBanner className="sm:hidden" />
     </div>
   )
 }

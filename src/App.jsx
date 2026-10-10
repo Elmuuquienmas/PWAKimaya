@@ -6,6 +6,7 @@ import { useThemeEffect } from './hooks/useThemeEffect'
 import { TopBar } from './components/TopBar'
 import { SideDrawer, EdgeHandle } from './components/SideDrawer'
 import { FeedbackOverlay } from './components/FeedbackOverlay'
+import { InstallBanner } from './components/landing/InstallBanner'
 import { ControllerPage } from './pages/ControllerPage'
 import { LorePage } from './pages/LorePage'
 import { StatsPage } from './pages/StatsPage'
@@ -57,11 +58,13 @@ function App() {
 
       <FeedbackOverlay />
 
-      <div className="bg-surface fixed inset-0 z-[60] hidden flex-col items-center justify-center gap-3 text-center portrait:max-md:flex">
+      <div className="bg-surface fixed inset-0 z-[60] hidden flex-col items-center justify-center gap-3 px-8 text-center portrait:max-md:flex">
         <Smartphone size={44} className="text-accent rotate-90" />
         <p className="font-extrabold">Gira tu celular</p>
         <p className="text-muted text-sm">El control se usa en horizontal</p>
+        <InstallBanner className="mt-4" />
       </div>
+      <InstallBanner className="portrait:max-md:hidden" />
     </div>
   )
 }
