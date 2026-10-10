@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Leaf, Moon, Sun } from 'lucide-react'
 import { useGameStore } from '../../store/gameStore'
+import { useInstallPrompt } from '../../hooks/useInstallPrompt'
+import { InstallHelp } from './InstallButton'
 
 const LINKS = [
   { href: '#personajes', label: 'Personajes' },
@@ -12,6 +14,9 @@ export function NavBar() {
   const theme = useGameStore((s) => s.theme)
   const toggleTheme = useGameStore((s) => s.toggleTheme)
   const [scrolled, setScrolled] = useState(false)
+  const [helpOpen, setHelpOpen] = useState(false)
+  const [waiting, setWaiting] = useState(false)
+  const { installed, isIos, install, openInChrome } = useInstallPrompt()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -46,11 +51,34 @@ export function NavBar() {
           >
             {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-          <a href="#instalar" className="bg-accent rounded-full px-4 py-1.5 text-xs font-extrabold text-white">
-            Instalar
-          </a>
+          {installed ? (
+            <a href="/?app=1" className="bg-accent rounded-full px-4 py-1.5 text-xs font-extrabold text-white">
+              Abrir
+            </a>
+          ) : (
+            <button
+              type="button"
+              onClick={async () => {
+                const result = await install()
+                if (result === 'chrome') {
+                  openInChrome()
+                  return
+                }
+                if (result === 'accepted' || result === 'dismissed') return
+                if (result === 'wait' && !waiting) {
+                  setWaiting(true)
+                  return
+                }
+                setHelpOpen(true)
+              }}
+              className="bg-accent rounded-full px-4 py-1.5 text-xs font-extrabold text-white"
+            >
+              {waiting ? 'Otra vez' : 'Instalar'}
+            </button>
+          )}
         </div>
       </div>
+      {helpOpen && <InstallHelp isIos={isIos} onClose={() => setHelpOpen(false)} onChrome={openInChrome} />}
     </nav>
   )
 }

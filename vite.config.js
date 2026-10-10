@@ -18,25 +18,28 @@ export default defineConfig({
         scope: '/',
         theme_color: '#262a31',
         background_color: '#262a31',
-        display: 'fullscreen',
+        display: 'standalone',
         orientation: 'landscape',
+        lang: 'es',
         icons: [
           {
             src: 'icon-192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any',
           },
           {
             src: 'icon-512.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any',
           },
           {
             src: 'icon-maskable-512.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'maskable'
-          }
+            purpose: 'maskable',
+          },
         ]
       },
       workbox: {
