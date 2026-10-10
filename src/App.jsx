@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { ScrollText, Smartphone, Trophy } from 'lucide-react'
 import { useGameStore } from './store/gameStore'
 import { useGameConnection } from './hooks/useGameConnection'
+import { useThemeEffect } from './hooks/useThemeEffect'
 import { TopBar } from './components/TopBar'
 import { SideDrawer, EdgeHandle } from './components/SideDrawer'
 import { FeedbackOverlay } from './components/FeedbackOverlay'
@@ -11,21 +12,13 @@ import { StatsPage } from './pages/StatsPage'
 
 function App() {
   useGameConnection()
+  useThemeEffect()
 
-  const theme = useGameStore((s) => s.theme)
-  const character = useGameStore((s) => s.activeCharacter)
   const gameState = useGameStore((s) => s.gameState)
   const [drawer, setDrawer] = useState(null)
 
   // Lore e Historial solo se abren en el menu o en pausa
   const menusAllowed = gameState !== 'playing'
-
-  useEffect(() => {
-    const root = document.documentElement
-    root.classList.toggle('dark', theme === 'dark')
-    root.dataset.character = character
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#262a31' : '#e6ebf1')
-  }, [theme, character])
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden">

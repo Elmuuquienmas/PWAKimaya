@@ -88,6 +88,78 @@ body {
   }
 }
 
+/* Pagina del juego: aqui si se puede hacer scroll y seleccionar texto */
+html.landing,
+html.landing body,
+html.landing #root {
+  height: auto;
+  min-height: 100%;
+}
+
+html.landing body {
+  overflow-x: hidden;
+  overflow-y: auto;
+  touch-action: auto;
+  user-select: auto;
+  -webkit-user-select: auto;
+}
+
+html.landing {
+  scroll-behavior: smooth;
+}
+
+.pixel {
+  image-rendering: pixelated;
+}
+
+/* Capas del bosque. Cada imagen mide 512x288, asi que una vuelta completa mide 177.78 veces el alto/100 */
+.forest-layer {
+  position: absolute;
+  inset: 0;
+  background-repeat: repeat-x;
+  background-size: auto 100%;
+  image-rendering: pixelated;
+  animation: forest-drift var(--speed) linear infinite;
+}
+
+@keyframes forest-drift {
+  to {
+    background-position-x: -177.78svh;
+  }
+}
+
+/* Tira de sprites de 100x100 por cuadro */
+.sprite {
+  width: calc(100px * var(--s));
+  height: calc(100px * var(--s));
+  background-repeat: no-repeat;
+  background-size: calc(var(--frames) * 100px * var(--s)) 100%;
+  image-rendering: pixelated;
+  animation: sprite-play var(--dur) steps(var(--frames)) infinite;
+}
+
+@keyframes sprite-play {
+  to {
+    background-position-x: calc(var(--frames) * -100px * var(--s));
+  }
+}
+
+@keyframes run-across {
+  from {
+    transform: translateX(-30vw);
+  }
+  to {
+    transform: translateX(115vw);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .forest-layer,
+  .sprite {
+    animation: none;
+  }
+}
+
 @keyframes low-health-pulse {
   0%,
   100% {
