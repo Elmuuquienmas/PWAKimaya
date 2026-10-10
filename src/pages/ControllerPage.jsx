@@ -1,104 +1,132 @@
-import { useGameConnection } from '../hooks/useGameConnection'
+import { useCallback, useState } from 'react'
+import { Keyboard, QrCode, WifiOff } from 'lucide-react'
 import { useGameStore } from '../store/gameStore'
-import { useState } from 'react'
+import { Gamepad } from '../components/Gamepad'
+import { CameraFeed } from '../components/CameraFeed'
+import { ManualIpDialog } from '../components/ManualIpDialog'
 
-export const ControllerPage = () => {
-  const { wsStatus, ip, activeCharacter } = useGameStore()
-  const { sendInput } = useGameConnection()
-  
-  // Si no hay IP mostramos la página de conexión manual
-  const [manualIp, setManualIp] = useState('')
-  const { setConnectionDetails } = useGameStore()
+export function ControllerPage() {
+  const ip = useGameStore((s) => s.ip)
+  const wsStatus = useGameStore((s) => s.wsStatus)
+  const demoConnected = useGameStore((s) => s.demoConnected)
+  const setConnectionDetails = useGameStore((s) => s.setConnectionDetails)
+  const clearConnection = useGameStore((s) => s.clearConnection)
 
-  const handleManualConnect = () => {
-    if (manualIp) setConnectionDetails(manualIp, '8080')
+  const [scanning, setScanning] = useState(false)
+  const [cameraError, setCameraError] = useState('')
+  const [manualOpen, setManualOpen] = useState(false)
+
+  const connected = demoConnected || wsStatus === 'connected'
+
+  const handleDetected = useCallback(
+    ({ ip, port }) => {
+      setScanning(false)
+      setConnectionDetails(ip, port)
+    },
+    [setConnectionDetails],
+  )
+
+  const startScan = () => {
+    clearConnection()
+    setCameraError('')
+    setScanning(true)
   }
-
-  if (!ip) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-        <div className="bg-gray-950/80 border border-white/15 rounded-2xl px-8 py-8 max-w-md">
-          <h1 className="text-3xl font-black mb-3">Kimaya Companion App</h1>
-          <p className="mb-6 opacity-80">Escanea el QR del juego o escribe la IP de tu PC. Historial y Lore se pueden ver sin conectar.</p>
-          <input 
-            type="text" 
-            placeholder="Ej: 192.168.1.15" 
-            value={manualIp}
-            onChange={(e) => setManualIp(e.target.value)}
-            className="p-3 text-xl rounded-lg bg-white text-gray-900 text-center mb-4 w-full border border-gray-300"
-          />
-          <button onClick={handleManualConnect} className="px-6 py-3 bg-blue-600 text-white rounded-full font-bold shadow-lg active:scale-95 transition-transform">
-            Conectar Mando
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  // Mando Principal
-  const btnColor = activeCharacter === 'falin' ? 'bg-yellow-600' : 'bg-pink-600'
 
   return (
-    <div className="flex flex-row items-center justify-between w-full h-full p-4 md:p-10 select-none">
-      
-      {/* Indicador de estado flotante */}
-      {wsStatus !== 'Conectado' && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/80 px-4 py-2 rounded-full text-xs font-bold text-red-400 border border-red-500 shadow-xl z-50">
-          Estado: {wsStatus}
-        </div>
+    <div className="absolute inset-0 px-[6vw] pb-3 pt-2">
+      <div
+        className={`relative h-full w-full overflow-hidden rounded-[32px] transition-colors duration-500 ${
+          connected ? 'neu-inset' : 'bg-black'
+        }`}
+      >
+        {!connected && <CameraFeed active={scanning} onDetected={handleDetected} onError={setCameraError} />}
+
+        <Gamepad disabled={!connected} />
+
+        {!connected && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-center">
+            {scanning ? (
+              <ScanFrame error={cameraError} onCancel={() => setScanning(false)} />
+            ) : ip ? (
+              <ConnectionState ip={ip} wsStatus={wsStatus} onScan={startScan} onCancel={clearConnection} />
+            ) : (
+              <IdleState onScan={startScan} onManual={() => setManualOpen(true)} />
+            )}
+          </div>
+        )}
+      </div>
+
+      {manualOpen && (
+        <ManualIpDialog
+          onClose={() => setManualOpen(false)}
+          onConnect={(host, port) => {
+            setManualOpen(false)
+            setConnectionDetails(host, port)
+          }}
+        />
       )}
-
-      {/* D-PAD (Lado Izquierdo) */}
-      <div className="w-1/3 flex items-center justify-center">
-        <div className="relative w-40 h-40">
-           <GamepadButton btn="UP" sendInput={sendInput} className={`absolute top-0 left-12 w-16 h-16 ${btnColor} rounded-t-lg shadow-[0_5px_0_rgba(0,0,0,0.5)]`} />
-           <GamepadButton btn="LEFT" sendInput={sendInput} className={`absolute top-12 left-0 w-16 h-16 ${btnColor} rounded-l-lg shadow-[0_5px_0_rgba(0,0,0,0.5)]`} />
-           <div className={`absolute top-12 left-12 w-16 h-16 ${btnColor}`}></div> {/* Centro */}
-           <GamepadButton btn="RIGHT" sendInput={sendInput} className={`absolute top-12 right-0 w-16 h-16 ${btnColor} rounded-r-lg shadow-[0_5px_0_rgba(0,0,0,0.5)]`} />
-           <GamepadButton btn="DOWN" sendInput={sendInput} className={`absolute bottom-0 left-12 w-16 h-16 ${btnColor} rounded-b-lg shadow-[0_5px_0_rgba(0,0,0,0.5)]`} />
-        </div>
-      </div>
-
-      {/* Botones Centrales (SELECT / START) */}
-      <div className="w-1/3 flex flex-col items-center justify-end h-full pb-8 space-y-4">
-         <GamepadButton btn="SELECT" sendInput={sendInput} className="w-16 h-6 bg-gray-600 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md" label="SELECT" />
-         <GamepadButton btn="START" sendInput={sendInput} className="w-16 h-6 bg-gray-600 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md" label="START" />
-      </div>
-
-      {/* Botones de Acción (Lado Derecho) */}
-      <div className="w-1/3 flex items-center justify-center">
-        <div className="relative w-40 h-40">
-           <GamepadButton btn="Y" sendInput={sendInput} className="absolute top-0 left-12 w-14 h-14 bg-yellow-500 text-black font-black rounded-full shadow-[0_5px_0_rgba(0,0,0,0.5)] flex items-center justify-center text-xl" label="Y" />
-           <GamepadButton btn="X" sendInput={sendInput} className="absolute top-12 left-0 w-14 h-14 bg-blue-600 text-white font-black rounded-full shadow-[0_5px_0_rgba(0,0,0,0.5)] flex items-center justify-center text-xl" label="X" />
-           <GamepadButton btn="B" sendInput={sendInput} className="absolute top-12 right-0 w-14 h-14 bg-red-600 text-white font-black rounded-full shadow-[0_5px_0_rgba(0,0,0,0.5)] flex items-center justify-center text-xl" label="B" />
-           <GamepadButton btn="A" sendInput={sendInput} className="absolute bottom-0 left-12 w-14 h-14 bg-green-600 text-white font-black rounded-full shadow-[0_5px_0_rgba(0,0,0,0.5)] flex items-center justify-center text-xl" label="A" />
-        </div>
-      </div>
     </div>
   )
 }
 
-function GamepadButton({ btn, label, className, sendInput }) {
-  const handleStart = (e) => {
-    if (e.cancelable) e.preventDefault() // Prevenir scroll/zoom
-    sendInput(btn, 1)
-  }
-  const handleEnd = (e) => {
-    if (e.cancelable) e.preventDefault()
-    sendInput(btn, 0)
-  }
-
+function IdleState({ onScan, onManual }) {
   return (
-    <div 
-      className={`${className} active:scale-95 active:shadow-none active:translate-y-1 transition-all cursor-pointer`}
-      onTouchStart={handleStart}
-      onTouchEnd={handleEnd}
-      onTouchCancel={handleEnd}
-      onMouseDown={handleStart}
-      onMouseUp={handleEnd}
-      onMouseLeave={handleEnd}
-    >
-      {label && <span>{label}</span>}
+    <>
+      <button
+        type="button"
+        onClick={onScan}
+        className="neu text-accent flex h-[clamp(88px,30vh,140px)] w-[clamp(88px,30vh,140px)] flex-col items-center justify-center gap-1 rounded-full font-extrabold transition-transform active:scale-95"
+      >
+        <QrCode size={40} />
+        <span className="text-xs">Escanear</span>
+      </button>
+      <p className="max-w-xs text-sm font-semibold text-white/80">Escanea el QR que aparece en la pantalla del juego</p>
+      <button
+        type="button"
+        onClick={onManual}
+        className="flex items-center gap-1.5 text-xs font-bold text-white/50 underline-offset-4 hover:underline"
+      >
+        <Keyboard size={14} /> o escribe la IP
+      </button>
+    </>
+  )
+}
+
+function ScanFrame({ error, onCancel }) {
+  const corner = 'absolute h-8 w-8 border-accent'
+  return (
+    <>
+      <div className="relative h-[min(52vh,240px)] w-[min(52vh,240px)]">
+        <span className={`${corner} left-0 top-0 rounded-tl-2xl border-l-4 border-t-4`} />
+        <span className={`${corner} right-0 top-0 rounded-tr-2xl border-r-4 border-t-4`} />
+        <span className={`${corner} bottom-0 left-0 rounded-bl-2xl border-b-4 border-l-4`} />
+        <span className={`${corner} bottom-0 right-0 rounded-br-2xl border-b-4 border-r-4`} />
+      </div>
+      <p className="text-sm font-semibold text-white/90">{error || 'Apunta al QR del juego'}</p>
+      <button type="button" onClick={onCancel} className="rounded-full bg-white/15 px-5 py-1.5 text-xs font-bold text-white backdrop-blur">
+        Cancelar
+      </button>
+    </>
+  )
+}
+
+function ConnectionState({ ip, wsStatus, onScan, onCancel }) {
+  const failed = wsStatus === 'closed' || wsStatus === 'error'
+  return (
+    <div className="neu flex max-w-sm flex-col items-center gap-3 rounded-[28px] px-7 py-6">
+      {failed && <WifiOff className="text-red-500" />}
+      <p className="font-extrabold">{failed ? `No se pudo conectar con ${ip}` : `Conectando con ${ip}…`}</p>
+      <p className="text-muted text-xs">
+        {failed ? 'Revisa que el juego esté abierto y que estés en la misma red. Seguimos intentando.' : 'Un momento.'}
+      </p>
+      <div className="mt-1 flex gap-3">
+        <button type="button" onClick={onCancel} className="neu-sm text-muted rounded-full px-4 py-2 text-xs font-bold">
+          Cancelar
+        </button>
+        <button type="button" onClick={onScan} className="neu-sm text-accent rounded-full px-4 py-2 text-xs font-extrabold">
+          Escanear otro QR
+        </button>
+      </div>
     </div>
   )
 }

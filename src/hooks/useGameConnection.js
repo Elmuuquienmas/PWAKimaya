@@ -1,88 +1,87 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { useGameStore } from '../store/gameStore'
 
+// Se usa una sola vez en App. Los botones mandan datos con `send` del store.
 export const useGameConnection = () => {
-  const wsRef = useRef(null)
-  
-  const { ip, port, setConnectionDetails, setWsStatus, triggerHit, setCharacter } = useGameStore()
+  const ip = useGameStore((s) => s.ip)
+  const port = useGameStore((s) => s.port)
+  const [retry, setRetry] = useState(0)
 
+  // Si la app se abrio desde el QR, la url trae ?ip=...&port=...
   useEffect(() => {
-    // Buscar parametros de conexion (QR code)
     const params = new URLSearchParams(window.location.search)
     const ipParam = params.get('ip')
-    const portParam = params.get('port') || '8080'
-
-    if (ipParam && !ip) {
-      setConnectionDetails(ipParam, portParam)
+    if (ipParam) {
+      useGameStore.getState().setConnectionDetails(ipParam, params.get('port') || '8080')
     }
-  }, [ip, setConnectionDetails])
+  }, [])
 
   useEffect(() => {
     if (!ip) return
 
-    setWsStatus('Conectando...')
-    const wsUrl = `ws://${ip}:${port}/mando`
-    
-    try {
-      const ws = new WebSocket(wsUrl)
-      
-      ws.onopen = () => {
-        setWsStatus('Conectado')
-      }
-      
-      ws.onmessage = (event) => {
-        // Recibir eventos de Unity (Opcional, para UI visual)
-        try {
-          const data = JSON.parse(event.data)
-          if (data.event === 'damage_received') {
-            triggerHit()
-          } else if (data.event === 'character_switch') {
-            setCharacter(data.character)
-          }
-        } catch (e) {
-          console.error("Error parseando msj del WS", e)
-        }
-      }
+    const store = useGameStore.getState()
+    let closedByUs = false
+    let retryTimer
+    let ws
 
-      ws.onclose = () => {
-        setWsStatus('Desconectado')
-        // Intentar reconectar
-        setTimeout(() => {
-          if (document.visibilityState === 'visible') {
-            setConnectionDetails(ip, port) // Refresca para forzar otro intento si es necesario
-          }
-        }, 3000)
-      }
-      
-      ws.onerror = (error) => {
-        console.error('WebSocket Error:', error)
-        setWsStatus('Error de conexión')
-      }
-      
-      wsRef.current = ws
+    store.setWsStatus('connecting')
+    try {
+      ws = new WebSocket(`ws://${ip}:${port}/mando`)
     } catch (e) {
       console.error(e)
-      setWsStatus('Error al instanciar WS')
+      store.setWsStatus('error')
+      return
+    }
+
+    ws.onopen = () => {
+      store.setWsStatus('connected')
+      store.setSender((payload) => {
+        if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(payload))
+      })
+    }
+
+    ws.onmessage = (event) => {
+      let data
+      try {
+        data = JSON.parse(event.data)
+      } catch (e) {
+        console.error('Mensaje del juego que no es JSON', e)
+        return
+      }
+      const s = useGameStore.getState()
+      switch (data.event) {
+        case 'damage_received':
+          s.triggerHit()
+          if (typeof data.health === 'number') s.setHealth(data.health)
+          break
+        case 'low_health':
+          s.setHealth(data.health ?? 20)
+          break
+        case 'enemy_defeated':
+          s.triggerEnemyDefeated()
+          break
+        case 'character_switch':
+          s.setCharacter(data.character)
+          break
+        case 'game_state':
+          s.setGameState(data.state)
+          break
+      }
+    }
+
+    ws.onerror = () => store.setWsStatus('error')
+
+    ws.onclose = () => {
+      store.setSender(() => {})
+      if (closedByUs) return
+      store.setWsStatus('closed')
+      retryTimer = setTimeout(() => setRetry((r) => r + 1), 3000)
     }
 
     return () => {
-      if (wsRef.current) {
-        wsRef.current.close()
-      }
+      closedByUs = true
+      clearTimeout(retryTimer)
+      ws.close()
     }
-  }, [ip, port, setWsStatus, setConnectionDetails, triggerHit, setCharacter])
-
-  const sendInput = useCallback((button, state) => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      const payload = JSON.stringify({ b: button, s: state })
-      wsRef.current.send(payload)
-    }
-    
-    // Haptic feedback (Vibración al pulsar botones)
-    if (state === 1 && navigator.vibrate) {
-      navigator.vibrate(50)
-    }
-  }, [])
-
-  return { sendInput }
+  }, [ip, port, retry])
 }
