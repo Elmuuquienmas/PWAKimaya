@@ -251,6 +251,34 @@ Lo que manda el juego al terminar un nivel:
 ```
 
 Mientras terminamos de crear el proyecto en Supabase, las pantallas leen `public/api/stats.json` y `public/api/lore.json` para poder probar.
+## Pagina del juego y app instalada
+
+La misma direccion muestra dos cosas distintas segun como se abra:
+
+- **En el navegador** sale una pagina promocional del juego: el bosque en movimiento con Falin y Mia corriendo (usamos el arte del juego), los personajes, una demo del control que se puede presionar, como funciona y el boton de **Instala el control**.
+- **Instalada como app** (o abierta desde el QR del juego, que trae `?ip=`) va directo al control.
+
+```mermaid
+flowchart TD
+  abrir["Se abre la direccion"]
+  inst{"¿Esta instalada como app o trae ?ip / ?app?"}
+  control["Control"]
+  promo["Pagina del juego"]
+  boton["Boton Instala el control"]
+
+  abrir --> inst
+  inst -->|si| control
+  inst -->|no| promo
+  promo --> boton
+  boton -->|el navegador lo permite| prompt["Ventana de instalar del navegador"]
+  boton -->|iPhone u otro navegador| pasos["Pasos para agregarla a la pantalla de inicio"]
+  prompt --> control
+```
+
+Para saber si esta instalada revisamos `display-mode: standalone` / `fullscreen`. El manifest abre la app con `start_url: /?app=1`, asi siempre cae en el control.
+
+El boton de instalar usa el evento `beforeinstallprompt` (Chrome y Android). En iPhone ese evento no existe, asi que mostramos los pasos para hacerlo desde Safari.
+
 ## Diseño de la interfaz
 
 Usamos un estilo neumorfico (botones que parecen salir o hundirse en la pantalla con sombras suaves). Hay modo claro y modo oscuro, se cambia con el boton del sol/luna y se queda guardado. Si nunca se ha cambiado, toma el del celular.
@@ -353,7 +381,8 @@ Si se va el internet no sale la pantalla de error del navegador. Sale una pantal
 
 ```
 src/
-  pages/        ControllerPage (centro), LorePage y StatsPage (paneles)
+  pages/        LandingPage (pagina del juego), ControllerPage (centro), LorePage y StatsPage (paneles)
+  components/landing/   NavBar, Hero, Reveal, Sprite, InstallButton
   components/   Gamepad, SideDrawer, CameraFeed, TopBar, DemoPanel, FeedbackOverlay, ManualIpDialog
   hooks/        useGameConnection (WebSocket), useApiList, useOnline
   store/        gameStore (Zustand: tema, personaje, vida, estado del juego, conexion)
@@ -392,6 +421,14 @@ npm install
 npm run dev
 ```
 
+Para probar el control sin tener el juego, hicimos un simulador que hace lo mismo que haria Unity: escucha en `ws://localhost:8080/mando` e imprime en la terminal que boton se presiona y cual se suelta.
+
+```bash
+npm run simulador
+```
+
+Con el simulador prendido, abrir `http://localhost:5173/?app=1`, elegir "o escribe la IP" y poner `127.0.0.1`.
+
 Para probar el service worker hay que hacer build:
 
 ```bash
@@ -411,6 +448,8 @@ Hecho:
 - [x] Colores y botones extra segun el personaje
 - [x] Avisos de daño, poca vida y enemigo vencido, con modo demo
 - [x] Diseño de la base de datos
+- [x] Pagina promocional del juego con boton para instalar el control
+- [x] Iconos de la app hechos con el arte del juego
 
 Pendiente:
 
