@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ScrollText, Smartphone, Trophy } from 'lucide-react'
 import { useGameStore } from './store/gameStore'
 import { useGameConnection } from './hooks/useGameConnection'
@@ -17,6 +17,7 @@ function App() {
 
   const gameState = useGameStore((s) => s.gameState)
   const [drawer, setDrawer] = useState(null)
+  const portraitPhone = usePortraitPhone()
 
   // Lore e Historial solo se abren en el menu o en pausa
   const menusAllowed = gameState !== 'playing'
@@ -58,15 +59,37 @@ function App() {
 
       <FeedbackOverlay />
 
-      <div className="bg-surface fixed inset-0 z-[60] hidden flex-col items-center justify-center gap-3 px-8 text-center portrait:max-md:flex">
+      <div className={`bg-surface fixed inset-0 z-[60] flex-col items-center justify-center gap-3 px-8 text-center ${portraitPhone ? 'flex' : 'hidden'}`}>
         <Smartphone size={44} className="text-accent rotate-90" />
         <p className="font-extrabold">Gira tu celular</p>
         <p className="text-muted text-sm">El control se usa en horizontal</p>
         <InstallBanner className="mt-4" />
       </div>
-      <InstallBanner className="portrait:max-md:hidden" />
+      <InstallBanner className={portraitPhone ? 'hidden' : ''} />
     </div>
   )
+}
+
+function usePortraitPhone() {
+  const [portrait, setPortrait] = useState(false)
+
+  useEffect(() => {
+    const update = () => {
+      const narrow = Math.min(window.innerWidth, window.innerHeight) < 768
+      setPortrait(narrow && window.innerHeight > window.innerWidth)
+      document.documentElement.style.height = `${window.innerHeight}px`
+    }
+    update()
+    window.addEventListener('resize', update)
+    window.addEventListener('orientationchange', update)
+    return () => {
+      window.removeEventListener('resize', update)
+      window.removeEventListener('orientationchange', update)
+      document.documentElement.style.height = ''
+    }
+  }, [])
+
+  return portrait
 }
 
 export default App

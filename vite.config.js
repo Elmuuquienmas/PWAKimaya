@@ -19,6 +19,8 @@ export default defineConfig({
         theme_color: '#262a31',
         background_color: '#262a31',
         display: 'standalone',
+        // any: en iPhone la app instalada si puede girar. Si se omite, iOS la deja fija.
+        orientation: 'any',
         lang: 'es',
         icons: [
           {
