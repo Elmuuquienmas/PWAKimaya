@@ -8,45 +8,39 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon-64.png', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'promo/*.png'],
+      manifestFilename: 'manifest.json',
       manifest: {
         name: 'Kimaya Companion App',
         short_name: 'Kimaya',
         description: 'Controlador interactivo y Companion App para Kimaya: El Bosque del Eco',
-        // El id y la pagina de inicio tienen que ser el mismo, si no Android no instala y solo recarga el sitio.
-        id: '/?app=1',
-        start_url: '/?app=1',
+        // Sin ?app=1: con query en start_url Chrome Android dice "This app cannot be installed".
+        // La app instalada se reconoce por display-mode standalone en main.jsx.
+        id: '/',
+        start_url: '/',
         scope: '/',
         theme_color: '#262a31',
         background_color: '#262a31',
         display: 'standalone',
+        display_override: ['standalone', 'browser'],
+        prefer_related_applications: false,
         // any: en iPhone la app instalada si puede girar. Si se omite, iOS la deja fija.
         orientation: 'any',
         lang: 'es',
         icons: [
-          {
-            src: 'icon-192.png',
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'any',
-          },
-          {
-            src: 'icon-512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any',
-          },
-          {
-            src: 'icon-maskable-512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'maskable',
-          },
+          { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ]
       },
       workbox: {
+        globIgnores: ['**/manifest.json', '**/manifest.webmanifest', '**/icon-*.png'],
         runtimeCaching: [
           {
-            urlPattern: ({ request }) => request.destination === 'image' || request.destination === 'style' || request.destination === 'script' || request.destination === 'font',
+            urlPattern: ({ request, url }) =>
+              (request.destination === 'image' && !url.pathname.startsWith('/icon-')) ||
+              request.destination === 'style' ||
+              request.destination === 'script' ||
+              request.destination === 'font',
             handler: 'CacheFirst',
             options: {
               cacheName: 'assets-cache',
