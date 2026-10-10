@@ -7,25 +7,35 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icon-512.png'],
+      includeAssets: ['favicon-64.png', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png', 'promo/*.png'],
       manifest: {
+        id: '/',
         name: 'Kimaya Companion App',
         short_name: 'Kimaya',
         description: 'Controlador interactivo y Companion App para Kimaya: El Bosque del Eco',
-        theme_color: '#111827',
-        background_color: '#111827',
+        // ?app=1 hace que abra el control y no la pagina del juego
+        start_url: '/?app=1',
+        scope: '/',
+        theme_color: '#262a31',
+        background_color: '#262a31',
         display: 'fullscreen',
         orientation: 'landscape',
         icons: [
           {
-            src: 'favicon.svg',
+            src: 'icon-192.png',
             sizes: '192x192',
-            type: 'image/svg+xml'
+            type: 'image/png'
           },
           {
             src: 'icon-512.png',
             sizes: '512x512',
             type: 'image/png'
+          },
+          {
+            src: 'icon-maskable-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
           }
         ]
       },
