@@ -36,6 +36,19 @@ export default defineConfig({
         globIgnores: ['**/manifest.json', '**/manifest.webmanifest', '**/icon-*.png'],
         runtimeCaching: [
           {
+            // Si el POST al backend falla (sin internet), Workbox lo guarda en IndexedDB
+            // (base workbox-background-sync, almacén kimaya-commands) y lo reintenta al volver la red.
+            urlPattern: /^http:\/\/localhost:8080\/api\/v1\/commands$/,
+            handler: 'NetworkOnly',
+            method: 'POST',
+            options: {
+              backgroundSync: {
+                name: 'kimaya-commands',
+                options: { maxRetentionTime: 24 * 60 },
+              },
+            },
+          },
+          {
             urlPattern: ({ request, url }) =>
               (request.destination === 'image' && !url.pathname.startsWith('/icon-')) ||
               request.destination === 'style' ||

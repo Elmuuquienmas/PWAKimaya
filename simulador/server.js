@@ -5,7 +5,9 @@ import os from 'node:os'
 import QRCode from 'qrcode'
 import { WebSocketServer } from 'ws'
 
-const PORT = 8080
+// 8080 lo ocupa el backend de Spring Boot (kimaya-api) y 8081 lo reserva Windows.
+// El simulador usa otro puerto.
+const PORT = 8082
 const APP_PORT = 5173
 const presionados = new Set()
 

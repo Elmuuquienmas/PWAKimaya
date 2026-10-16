@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ChevronsUp, Hand, Shrink, Wind } from 'lucide-react'
 import { useGameStore } from '../store/gameStore'
+import { postCommand } from '../services/commandsApi'
 
 const EXTRA_BUTTONS = {
   falin: [
@@ -114,6 +115,9 @@ function PadButton({ btn, tone = 'text-ink', className = '', style, children }) 
     pressedRef.current = true
     setPressed(true)
     send({ b: btn, s: 1 })
+    postCommand(btn, { b: btn, s: 1 })
+      .then((saved) => console.log('Mando -> API', saved))
+      .catch((e) => console.warn('Sin red: el comando queda guardado para enviarse al volver internet.', e))
     navigator.vibrate?.(30)
   }
 
@@ -122,6 +126,9 @@ function PadButton({ btn, tone = 'text-ink', className = '', style, children }) 
     pressedRef.current = false
     setPressed(false)
     send({ b: btn, s: 0 })
+    postCommand(btn, { b: btn, s: 0 })
+      .then((saved) => console.log('Mando -> API', saved))
+      .catch((e) => console.warn('Sin red: el comando queda guardado para enviarse al volver internet.', e))
   }
 
   return (

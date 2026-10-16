@@ -7,6 +7,10 @@ const STATES = [
 ]
 
 // Para la presentacion: simula lo que mandaria el juego por el WebSocket.
+// "Simular conexion" ademas conecta de verdad a ws://localhost:8082/mando,
+// el mismo simulador local (npm run simulador), usando el flujo real de
+// conexion (el que tambien usan el QR y "escribir la IP"). Asi se puede
+// probar sin tocar el producto final.
 export function DemoPanel({ onClose }) {
   const s = useGameStore()
 
@@ -15,17 +19,23 @@ export function DemoPanel({ onClose }) {
     s.setHealth(s.health - 20)
   }
 
+  const toggleDemo = () => {
+    if (s.demoConnected) {
+      s.setDemoConnected(false)
+      s.clearConnection()
+    } else {
+      s.setDemoConnected(true)
+      s.setConnectionDetails('localhost', '8082')
+    }
+  }
+
   return (
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
       <div className="neu absolute right-0 top-12 z-50 w-72 space-y-3 rounded-3xl p-4">
         <p className="text-muted text-[11px] font-bold uppercase tracking-widest">Modo demo</p>
 
-        <button
-          type="button"
-          onClick={() => s.setDemoConnected(!s.demoConnected)}
-          className="flex w-full items-center justify-between text-sm font-bold"
-        >
+        <button type="button" onClick={toggleDemo} className="flex w-full items-center justify-between text-sm font-bold">
           Simular conexión
           <span className="neu-inset relative h-6 w-11 rounded-full">
             <span
@@ -35,6 +45,9 @@ export function DemoPanel({ onClose }) {
             />
           </span>
         </button>
+        <p className="text-muted -mt-1 text-[11px]">
+          Se conecta a ws://localhost:8082/mando. Corre <code>npm run simulador</code> en otra terminal.
+        </p>
 
         <div className="grid grid-cols-2 gap-2 text-xs font-bold">
           <DemoButton onClick={s.toggleCharacter}>Cambiar personaje</DemoButton>

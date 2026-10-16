@@ -36,7 +36,9 @@ export const useGameConnection = () => {
     ws.onopen = () => {
       store.setWsStatus('connected')
       store.setSender((payload) => {
+        console.log('Mando -> juego', `ws://${ip}:${port}/mando`, payload)
         if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(payload))
+        else console.warn('No se mando al juego: el socket no esta abierto', payload)
       })
     }
 
