@@ -250,7 +250,7 @@ Lo que manda el juego al terminar un nivel:
 }
 ```
 
-Mientras terminamos de crear el proyecto en Supabase, las pantallas leen `public/api/stats.json` y `public/api/lore.json` para poder probar.
+El proyecto de Supabase ya está creado. Las partidas y el lore de las pantallas siguen leyendo `public/api/stats.json` y `public/api/lore.json` hasta que el juego empiece a guardar las partidas. Los comandos del mando sí se guardan: la API de Spring Boot los escribe en Supabase y el Historial los muestra cuando esa API está corriendo en la computadora.
 ## Pagina del juego y app instalada
 
 La misma direccion muestra dos cosas distintas segun como se abra:
@@ -448,10 +448,13 @@ Hecho:
 - [x] Colores y botones extra segun el personaje
 - [x] Avisos de daño, poca vida y enemigo vencido, con modo demo
 - [x] Diseño de la base de datos
+- [x] Proyecto de Supabase creado. La API de Spring Boot ([Kimaya-api](https://github.com/Elmuuquienmas/Kimaya-api)) guarda ahí los comandos del mando
+- [x] El Historial muestra esos comandos cuando la API está corriendo en la computadora (`http://localhost:8080/api/v1/commands`)
+- [x] Laboratorio de pruebas en `docs/laboratorio-pruebas` (scripts SQL y capturas)
 - [x] Pagina promocional del juego con boton para instalar el control
 - [x] Iconos de la app hechos con el arte del juego
 
 Pendiente:
 
-- [ ] Crear el proyecto en Supabase y conectar las pantallas
+- [ ] Conectar las pantallas de partidas y lore a la base. Hoy siguen leyendo los JSON de prueba. Las partidas las escribe el juego al terminar un nivel o al perder
 - [ ] Conexion segura (`wss://`) con el juego. Como la app esta en https, el navegador no deja abrir un `ws://` normal
