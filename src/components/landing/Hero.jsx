@@ -48,10 +48,10 @@ export function Hero() {
         style={{ transform: `translateY(${scroll * -0.25}px)`, opacity: Math.max(0, 1 - scroll / 500) }}
       >
         <p className="text-sm font-bold uppercase tracking-[0.4em] text-white/80 drop-shadow">Plataformas 2D · PC</p>
-        <h1 className="mt-3 text-[clamp(64px,16vw,200px)] font-black leading-[0.85] tracking-tight drop-shadow-[0_6px_24px_rgba(0,0,0,0.35)]">
+        <h1 className="mt-3 pb-[0.16em] text-[clamp(64px,16vw,200px)] font-black leading-[1] tracking-tight drop-shadow-[0_6px_24px_rgba(0,0,0,0.35)]">
           Kimaya
         </h1>
-        <p className="mt-3 text-[clamp(20px,3.4vw,40px)] font-extrabold drop-shadow">El Bosque del Eco</p>
+        <p className="mt-2 text-[clamp(20px,3.4vw,40px)] font-extrabold drop-shadow">El Bosque del Eco</p>
         <p className="mt-5 max-w-xl text-base text-white/90 drop-shadow sm:text-lg">
           Dos compañeros. Un bosque que escucha. Y tu celular como control.
         </p>
