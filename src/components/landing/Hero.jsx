@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
-import { Sprite } from './Sprite'
 import { InstallButton } from './InstallButton'
 
 // De atras para adelante, como el parallax del juego
@@ -31,15 +30,14 @@ export function Hero() {
         />
       ))}
 
-      {/* En cada cuadro las patas quedan al 62% del alto, por eso el bottom se ajusta con el tamaño */}
-      <div className="absolute left-0" style={{ bottom: 'calc(21% - 99px)', animation: 'run-across 14s linear infinite' }}>
-        <Sprite src="/promo/falin-run.png" frames={8} duration={0.6} scale={2.6} />
+      <div className="absolute left-0" style={{ bottom: '12%', animation: 'run-across 14s linear infinite' }}>
+        <img src="/dogs/falin-walk.gif" alt="" className="pixel h-28 w-auto sm:h-40" />
       </div>
       <div
         className="absolute left-0"
-        style={{ bottom: 'calc(21% - 84px)', animation: 'run-across 14s linear infinite', animationDelay: '-1.6s' }}
+        style={{ bottom: '13%', animation: 'run-across 14s linear infinite', animationDelay: '-1.6s' }}
       >
-        <Sprite src="/promo/mia-run.png" frames={8} duration={0.5} scale={2.2} />
+        <img src="/dogs/mia-walk.gif" alt="" className="pixel h-20 w-auto sm:h-28" />
       </div>
 
       <div className="absolute inset-0 bg-[#0b1a24]/0 transition-colors duration-500 dark:bg-[#0b1a24]/55" />

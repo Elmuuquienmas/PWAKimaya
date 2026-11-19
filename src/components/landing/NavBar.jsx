@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Leaf, Moon, Sun } from 'lucide-react'
+import { Moon, Sun } from 'lucide-react'
 import { useGameStore } from '../../store/gameStore'
 import { useInstallPrompt } from '../../hooks/useInstallPrompt'
 
@@ -7,6 +7,7 @@ const LINKS = [
   { href: '#personajes', label: 'Personajes' },
   { href: '#control', label: 'El control' },
   { href: '#como-funciona', label: 'Cómo funciona' },
+  { href: '#honor', label: 'Honor' },
 ]
 
 export function NavBar() {
@@ -30,7 +31,7 @@ export function NavBar() {
     >
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5">
         <a href="#" className="flex items-center gap-2 font-black tracking-tight">
-          <Leaf size={18} className={scrolled ? 'text-accent' : ''} /> Kimaya
+          <img src="/icon-192.png" alt="" className="pixel h-7 w-7 rounded-md" /> Kimaya
         </a>
         <div className="hidden items-center gap-7 text-sm font-semibold sm:flex">
           {LINKS.map(({ href, label }) => (

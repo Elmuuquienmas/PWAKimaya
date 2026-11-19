@@ -1,25 +1,27 @@
 import { useEffect, useState } from 'react'
 import { Gamepad2, Monitor, Moon, QrCode, ScrollText, Smartphone, Trophy, WifiOff } from 'lucide-react'
-import { useGameStore } from '../store/gameStore'
 import { useThemeEffect } from '../hooks/useThemeEffect'
 import { NavBar } from '../components/landing/NavBar'
 import { Hero } from '../components/landing/Hero'
 import { Reveal } from '../components/landing/Reveal'
-import { Sprite } from '../components/landing/Sprite'
 import { InstallButton } from '../components/landing/InstallButton'
 import { InstallBanner } from '../components/landing/InstallBanner'
 import { Gamepad } from '../components/Gamepad'
+import { HonorBoard } from '../components/HonorBoard'
 
 const CHARACTERS = [
   {
     id: 'falin',
     name: 'Falin',
-    breed: 'San Bernardo',
+    breed: 'Border Collie',
     tagline: 'La fuerza del bosque.',
-    text: 'Grande y noble. Empuja rocas y troncos para abrir camino, y con su salto impulsado llega a donde nadie más alcanza.',
+    text: 'Ágil y firme. Empuja rocas y troncos para abrir camino, y con su salto impulsado llega a donde nadie más alcanza.',
     skills: ['Empujar objetos', 'Salto impulsado'],
-    idle: '/promo/falin-idle.png',
-    run: '/promo/falin-run.png',
+    idle: '/dogs/falin-idle.gif',
+    run: '/dogs/falin-walk.gif',
+    frame: 252,
+    nudgeX: 15,
+    nudgeY: 15,
     color: 'text-amber-500',
     glow: 'from-amber-400/25',
   },
@@ -30,8 +32,11 @@ const CHARACTERS = [
     tagline: 'El olfato del bosque.',
     text: 'Pequeña y lista. Se mete por huecos donde nadie más cabe y su olfato descubre los secretos que el bosque esconde.',
     skills: ['Espacios estrechos', 'Olfato que revela secretos'],
-    idle: '/promo/mia-idle.png',
-    run: '/promo/mia-run.png',
+    idle: '/dogs/mia-idle.gif',
+    run: '/dogs/mia-walk.gif',
+    frame: 264,
+    nudgeX: 8,
+    nudgeY: 12,
     color: 'text-pink-500',
     glow: 'from-pink-400/25',
   },
@@ -40,7 +45,7 @@ const CHARACTERS = [
 const FEATURES = [
   { Icon: Gamepad2, title: 'Control en tiempo real', text: 'Los botones viajan por WebSocket directo a la PC, sin pasar por internet.' },
   { Icon: ScrollText, title: 'Lore del bosque', text: 'Lee las notas que vas encontrando en cada nivel.' },
-  { Icon: Trophy, title: 'Historial de partidas', text: 'Puntaje, monedas y tiempo de cada partida que juegues.' },
+  { Icon: Trophy, title: 'Cuadro de honor', text: 'Puntaje, tiempo, saltos y caídas de cada partida guardada.' },
   { Icon: WifiOff, title: 'Funciona sin internet', text: 'Lo que ya viste se queda guardado en el celular.' },
   { Icon: Moon, title: 'Modo claro y oscuro', text: 'Para jugar de día o en la noche del bosque.' },
   { Icon: Smartphone, title: 'Se instala como app', text: 'Sin tienda de apps. Se agrega a tu pantalla de inicio.' },
@@ -68,6 +73,7 @@ export function LandingPage() {
       <ControllerShowcase />
       <Features />
       <HowItWorks />
+      <HonorSection />
       <InstallSection />
       <footer className="text-muted px-6 py-10 pb-28 text-center text-xs sm:pb-10">
         Kimaya: El Bosque del Eco · Proyecto integrador
@@ -111,8 +117,16 @@ function CharacterCard({ character: c }) {
       className="neu relative w-full min-w-0 overflow-hidden rounded-[36px] p-6 sm:p-8"
     >
       <div className={`absolute inset-x-0 top-0 h-48 bg-gradient-to-b ${c.glow} to-transparent`} />
-      <div className="neu-inset relative mx-auto flex h-44 items-end justify-center overflow-hidden rounded-[28px]">
-        <Sprite src={hover ? c.run : c.idle} frames={hover ? 8 : 10} duration={hover ? 0.6 : 1.2} scale={2.2} className="-mb-16" />
+      <div className="neu-inset relative mx-auto h-48 overflow-hidden rounded-[28px] sm:h-52">
+        <img
+          src={hover ? c.run : c.idle}
+          alt=""
+          className="pixel absolute left-1/2 top-1/2 max-w-none"
+          style={{
+            height: c.frame,
+            transform: `translate(calc(-50% + ${c.nudgeX}px), calc(-50% + ${c.nudgeY}px))`,
+          }}
+        />
       </div>
       <p className={`mt-7 text-sm font-extrabold uppercase tracking-[0.25em] ${c.color}`}>{c.breed}</p>
       <h3 className="mt-1 text-5xl font-black tracking-tight">{c.name}</h3>
@@ -130,42 +144,19 @@ function CharacterCard({ character: c }) {
 }
 
 function ControllerShowcase() {
-  const character = useGameStore((s) => s.activeCharacter)
-  const setCharacter = useGameStore((s) => s.setCharacter)
-
   return (
     <section id="control" className="scroll-mt-14 px-6 py-24 sm:py-32">
       <SectionTitle
         eyebrow="Companion app"
         title="Tu celular es el control."
-        text="Y cambia con el personaje. Colores, íconos y botones especiales para Falin o para Mia. Pruébalo aquí mismo."
+        text="Izquierda y derecha apuntan el salto. Mantén A para cargarlo y suéltalo para saltar. START pausa la partida."
       />
 
       <Reveal className="mx-auto mt-14 max-w-4xl">
         <div className="rounded-[48px] bg-neutral-900 p-3 shadow-2xl sm:p-4">
-          <div
-            className="bg-surface relative aspect-[19.5/9] overflow-hidden rounded-[36px]"
-            style={{ '--btn': 'clamp(20px, 4.4vw, 46px)' }}
-          >
-            <div className="neu-inset absolute inset-[3%] rounded-[28px]">
-              <Gamepad />
-            </div>
+          <div className="bg-[#1c1c1c] relative aspect-[4/3] overflow-hidden rounded-[36px] [container-type:size] sm:aspect-[19.5/9]">
+            <Gamepad embedded />
           </div>
-        </div>
-      </Reveal>
-
-      <Reveal className="mt-10 flex justify-center" delay={150}>
-        <div className="neu-inset flex rounded-full p-1.5 text-sm font-bold">
-          {CHARACTERS.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => setCharacter(c.id)}
-              className={`rounded-full px-6 py-2 transition-all ${character === c.id ? `neu-sm ${c.color}` : 'text-muted'}`}
-            >
-              {c.name}
-            </button>
-          ))}
         </div>
       </Reveal>
     </section>
@@ -210,6 +201,21 @@ function HowItWorks() {
             <p className="text-muted mt-2">{text}</p>
           </Reveal>
         ))}
+      </div>
+    </section>
+  )
+}
+
+function HonorSection() {
+  return (
+    <section id="honor" className="scroll-mt-14 px-5 py-16 sm:px-6 sm:py-32">
+      <SectionTitle
+        eyebrow="Ranking"
+        title="Cuadro de honor."
+        text="Todas las partidas que el juego ha guardado: puntaje, tiempo, monedas, vidas, saltos y caídas."
+      />
+      <div className="mx-auto mt-12 max-w-3xl">
+        <HonorBoard />
       </div>
     </section>
   )

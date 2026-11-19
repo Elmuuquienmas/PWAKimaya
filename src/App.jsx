@@ -33,7 +33,7 @@ function App() {
       {menusAllowed && (
         <>
           <EdgeHandle side="left" label="Lore" icon={ScrollText} onClick={() => setDrawer('lore')} />
-          <EdgeHandle side="right" label="Historial" icon={Trophy} onClick={() => setDrawer('stats')} />
+          <EdgeHandle side="right" label="Honor" icon={Trophy} onClick={() => setDrawer('stats')} />
         </>
       )}
 
@@ -49,7 +49,7 @@ function App() {
 
       <SideDrawer
         side="right"
-        title="Historial"
+        title="Cuadro de honor"
         icon={Trophy}
         open={menusAllowed && drawer === 'stats'}
         onClose={() => setDrawer(null)}

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { FlaskConical, Heart, Leaf, Moon, Sun } from 'lucide-react'
+import { FlaskConical, Heart, Moon, Sun } from 'lucide-react'
 import { useGameStore } from '../store/gameStore'
 import { useOnline } from '../hooks/useOnline'
 import { DemoPanel } from './DemoPanel'
@@ -15,8 +15,8 @@ export function TopBar() {
   return (
     <header className="relative z-[25] flex items-center justify-between gap-3 px-4 pb-1 pt-3">
       <div className="flex items-center gap-2 font-black tracking-tight">
-        <span className="neu text-accent flex h-8 w-8 items-center justify-center rounded-xl">
-          <Leaf size={16} />
+        <span className="neu flex h-8 w-8 items-center justify-center overflow-hidden rounded-xl">
+          <img src="/icon-192.png" alt="" className="pixel h-full w-full object-cover" />
         </span>
         Kimaya
       </div>
