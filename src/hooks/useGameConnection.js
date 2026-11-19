@@ -40,6 +40,8 @@ export const useGameConnection = () => {
         if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(payload))
         else console.warn('No se mando al juego: el socket no esta abierto', payload)
       })
+      const name = useGameStore.getState().confirmedName
+      if (name !== null) ws.send(JSON.stringify({ name }))
     }
 
     ws.onmessage = (event) => {

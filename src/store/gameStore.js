@@ -39,9 +39,16 @@ export const useGameStore = create((set, get) => ({
   wsStatus: 'idle', // 'idle', 'connecting', 'connected', 'closed' o 'error'
   demoConnected: false,
   send: () => {},
+  // null: todavia no eligio. '' : jugo sin nombre. Un texto: nombre del cuadro de honor.
+  confirmedName: null,
+  playerName: localStorage.getItem('kimaya-player-name') || '',
 
   setConnectionDetails: (ip, port) => set({ ip, port }),
-  clearConnection: () => set({ ip: '', port: '', wsStatus: 'idle' }),
+  clearConnection: () => set({ ip: '', port: '', wsStatus: 'idle', confirmedName: null }),
+  confirmPlayerName: (playerName) => {
+    localStorage.setItem('kimaya-player-name', playerName)
+    set({ playerName, confirmedName: playerName })
+  },
   setWsStatus: (wsStatus) => set({ wsStatus }),
   setDemoConnected: (demoConnected) => set({ demoConnected }),
   setSender: (send) => set({ send }),

@@ -31,13 +31,13 @@ export function Hero() {
       ))}
 
       <div className="absolute left-0" style={{ bottom: '12%', animation: 'run-across 14s linear infinite' }}>
-        <img src="/dogs/falin-walk.gif" alt="" className="pixel h-28 w-auto sm:h-40" />
+        <img src="/dogs/falin-walk.webp" alt="" className="pixel h-28 w-auto sm:h-40" />
       </div>
       <div
         className="absolute left-0"
         style={{ bottom: '13%', animation: 'run-across 14s linear infinite', animationDelay: '-1.6s' }}
       >
-        <img src="/dogs/mia-walk.gif" alt="" className="pixel h-20 w-auto sm:h-28" />
+        <img src="/dogs/mia-walk.webp" alt="" className="pixel h-20 w-auto sm:h-28" />
       </div>
 
       <div className="absolute inset-0 bg-[#0b1a24]/0 transition-colors duration-500 dark:bg-[#0b1a24]/55" />

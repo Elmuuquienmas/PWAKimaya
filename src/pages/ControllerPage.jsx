@@ -12,11 +12,18 @@ export function ControllerPage() {
   const setConnectionDetails = useGameStore((s) => s.setConnectionDetails)
   const clearConnection = useGameStore((s) => s.clearConnection)
 
+  const confirmedName = useGameStore((s) => s.confirmedName)
+  const playerName = useGameStore((s) => s.playerName)
+  const confirmPlayerName = useGameStore((s) => s.confirmPlayerName)
+  const send = useGameStore((s) => s.send)
+
   const [scanning, setScanning] = useState(false)
   const [cameraError, setCameraError] = useState('')
   const [manualOpen, setManualOpen] = useState(false)
+  const [draftName, setDraftName] = useState(playerName)
 
   const connected = demoConnected || wsStatus === 'connected'
+  const askName = wsStatus === 'connected' && confirmedName === null
 
   const handleDetected = useCallback(
     ({ ip, port }) => {
@@ -41,7 +48,16 @@ export function ControllerPage() {
       >
         {!connected && <CameraFeed active={scanning} onDetected={handleDetected} onError={setCameraError} />}
 
-        <Gamepad disabled={!connected} />
+        <Gamepad disabled={!connected || askName} />
+
+        {askName && (
+          <NamePrompt
+            draftName={draftName}
+            onChange={setDraftName}
+            onConfirm={() => chooseName(cleanPlayerName(draftName), confirmPlayerName, send)}
+            onSkip={() => chooseName('', confirmPlayerName, send)}
+          />
+        )}
 
         {!connected && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-center">
@@ -128,5 +144,51 @@ function ConnectionState({ ip, wsStatus, onScan, onCancel }) {
         </button>
       </div>
     </div>
+  )
+}
+
+function cleanPlayerName(value) {
+  return value
+    .replace(/[^\p{L}\p{N} -]/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 24)
+}
+
+function chooseName(name, confirmPlayerName, send) {
+  confirmPlayerName(name)
+  send({ name })
+}
+
+function NamePrompt({ draftName, onChange, onConfirm, onSkip }) {
+  return (
+    <form
+      className="absolute inset-0 z-10 flex items-center justify-center bg-black/45 p-4"
+      onSubmit={(event) => {
+        event.preventDefault()
+        onConfirm()
+      }}
+    >
+      <div className="neu w-full max-w-sm rounded-[28px] p-6 text-center">
+        <h2 className="text-lg font-extrabold">Tu nombre</h2>
+        <p className="text-muted mt-1 text-sm">Se guarda con esta partida en el cuadro de honor.</p>
+        <input
+          autoFocus
+          maxLength={24}
+          value={draftName}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder="Cómo te llamas"
+          className="neu-inset text-ink placeholder:text-muted mt-4 w-full rounded-2xl px-4 py-3 text-center text-lg outline-none select-text"
+        />
+        <div className="mt-5 flex justify-center gap-3">
+          <button type="button" onClick={onSkip} className="neu-sm text-muted rounded-full px-5 py-2 font-bold">
+            Sin nombre
+          </button>
+          <button type="submit" className="neu-sm text-accent rounded-full px-5 py-2 font-extrabold">
+            Listo
+          </button>
+        </div>
+      </div>
+    </form>
   )
 }
