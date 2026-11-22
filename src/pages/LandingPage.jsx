@@ -22,7 +22,7 @@ const CHARACTERS = [
     frame: 252,
     nudgeX: 15,
     nudgeY: 15,
-    color: 'text-amber-500',
+    color: 'text-amber-800 dark:text-amber-400',
     glow: 'from-amber-400/25',
   },
   {
@@ -37,7 +37,7 @@ const CHARACTERS = [
     frame: 264,
     nudgeX: 8,
     nudgeY: 12,
-    color: 'text-pink-500',
+    color: 'text-pink-700 dark:text-pink-400',
     glow: 'from-pink-400/25',
   },
 ]
@@ -193,7 +193,7 @@ function HowItWorks() {
           <Reveal key={title} delay={i * 150} className="text-center">
             <div className="neu text-accent relative mx-auto flex h-24 w-24 items-center justify-center rounded-full">
               <Icon size={34} />
-              <span className="bg-accent absolute -right-1 -top-1 flex h-8 w-8 items-center justify-center rounded-full text-sm font-black text-white">
+              <span className="bg-accent absolute -right-1 -top-1 flex h-8 w-8 items-center justify-center rounded-full text-sm font-black text-white dark:text-[#1c1c1c]">
                 {i + 1}
               </span>
             </div>

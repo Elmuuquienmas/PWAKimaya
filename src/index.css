@@ -13,11 +13,11 @@
 :root {
   --surface: #e6ebf1;
   --text: #2b3445;
-  --muted: #7a8599;
+  --muted: #556070;
   --shade: #bcc5d3;
   --light: #ffffff;
-  --accent: #d38f00;
-  --accent-soft: rgba(211, 143, 0, 0.16);
+  --accent: #8a5f00;
+  --accent-soft: rgba(138, 95, 0, 0.16);
   --btn: clamp(44px, 14vh, 64px);
 }
 
@@ -32,8 +32,8 @@
 }
 
 :root[data-character="mia"] {
-  --accent: #d6457b;
-  --accent-soft: rgba(214, 69, 123, 0.16);
+  --accent: #b03060;
+  --accent-soft: rgba(176, 48, 96, 0.16);
 }
 
 :root.dark[data-character="mia"] {

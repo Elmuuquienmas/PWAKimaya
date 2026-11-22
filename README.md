@@ -275,7 +275,7 @@ flowchart TD
   prompt --> control
 ```
 
-Para saber si esta instalada revisamos `display-mode: standalone` / `fullscreen`. El manifest abre la app con `start_url: /?app=1`, asi siempre cae en el control.
+Para saber si esta instalada revisamos `display-mode: standalone` / `fullscreen`. El manifest abre la app con `start_url: /` (sin query: con `?app=1` Chrome Android decía "This app cannot be installed").
 
 El boton de instalar usa el evento `beforeinstallprompt` (Chrome y Android). En iPhone ese evento no existe, asi que mostramos los pasos para hacerlo desde Safari.
 

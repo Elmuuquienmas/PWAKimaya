@@ -23,7 +23,7 @@ export function InstallButton({ size = 'md', className = '' }) {
           if (window.installKimaya?.()) return
           if (isIos) setHelpOpen(true)
         }}
-        className={`bg-accent inline-flex items-center gap-2 rounded-full font-extrabold text-white shadow-lg transition-transform active:scale-95 ${sizes} ${className}`}
+        className={`bg-accent inline-flex items-center gap-2 rounded-full font-extrabold text-white shadow-lg transition-transform active:scale-95 dark:text-[#1c1c1c] ${sizes} ${className}`}
       >
         Instalar app
       </button>

@@ -58,14 +58,14 @@ export function HonorBoard({ compact = false }) {
                     {session.score}
                   </p>
                 </div>
-                <dl className="text-muted mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-semibold">
+                <div className="text-muted mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-semibold">
                   <Stat icon={Clock} text={formatDuration(session.time_played)} />
                   <Stat icon={Coins} text={`${session.coins} monedas`} />
                   <Stat icon={Heart} text={`${session.lives_left} vidas`} />
                   <span>{session.jumps} saltos</span>
                   <span>{session.falls} caídas</span>
                   <span>{new Date(session.created_at).toLocaleString('es-MX')}</span>
-                </dl>
+                </div>
               </div>
             </div>
           </li>
