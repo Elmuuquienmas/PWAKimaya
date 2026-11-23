@@ -149,7 +149,7 @@ function ControllerShowcase() {
       <SectionTitle
         eyebrow="Companion app"
         title="Tu celular es el control."
-        text="Izquierda y derecha apuntan el salto. Mantén A para cargarlo y suéltalo para saltar. START pausa la partida."
+        text="Mueve el Joystick 360° para explorar el Santuario o apuntar el salto. Mantén A o B para cargar la barra y suéltalo para saltar. Con X cambias de perrito y con PAUSA abres el menú."
       />
 
       <Reveal className="mx-auto mt-14 max-w-4xl">
