@@ -23,8 +23,10 @@ export default defineConfig({
         display: 'standalone',
         display_override: ['standalone', 'browser'],
         prefer_related_applications: false,
-        // any: en iPhone la app instalada si puede girar. Si se omite, iOS la deja fija.
-        orientation: 'any',
+        // El control se usa siempre en horizontal. La app instalada se abre fija en horizontal
+        // donde el sistema lo permite (Android y iOS que respetan el manifiesto).
+        // Si el sistema no lo respeta, App.jsx dibuja el control girado con CSS.
+        orientation: 'landscape',
         lang: 'es',
         icons: [
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
