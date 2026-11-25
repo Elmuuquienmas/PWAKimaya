@@ -67,20 +67,39 @@ function usePortraitPhone() {
   const [portrait, setPortrait] = useState(false)
 
   useEffect(() => {
+    const portraitQuery = window.matchMedia('(orientation: portrait)')
+    const timers = []
+
     const update = () => {
-      const narrow = Math.min(window.innerWidth, window.innerHeight) < 768
-      const portrait = narrow && window.innerHeight > window.innerWidth
+      // Safari del iPhone cambia innerWidth/innerHeight un momento después del giro.
+      // Se mide con el viewport visual y con la consulta de orientación para no quedarse con el dato viejo.
+      const width = window.visualViewport?.width ?? window.innerWidth
+      const height = window.visualViewport?.height ?? window.innerHeight
+      const narrow = Math.min(width, height) < 768
+      const portrait = narrow && height > width && portraitQuery.matches
       setPortrait(portrait)
       if (portrait && screen.orientation?.lock) {
         screen.orientation.lock('landscape').catch(() => {})
       }
     }
+
+    // Tras girar el celular se vuelve a medir cuando el navegador ya terminó de acomodarse.
+    const updateSoon = () => {
+      update()
+      timers.push(setTimeout(update, 150), setTimeout(update, 500))
+    }
+
     update()
     window.addEventListener('resize', update)
-    window.addEventListener('orientationchange', update)
+    window.addEventListener('orientationchange', updateSoon)
+    window.visualViewport?.addEventListener('resize', update)
+    portraitQuery.addEventListener?.('change', updateSoon)
     return () => {
+      timers.forEach(clearTimeout)
       window.removeEventListener('resize', update)
-      window.removeEventListener('orientationchange', update)
+      window.removeEventListener('orientationchange', updateSoon)
+      window.visualViewport?.removeEventListener('resize', update)
+      portraitQuery.removeEventListener?.('change', updateSoon)
     }
   }, [])
 

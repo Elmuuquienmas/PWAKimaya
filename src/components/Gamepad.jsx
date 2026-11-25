@@ -52,11 +52,17 @@ export function Gamepad({ disabled, embedded = false }) {
   )
 }
 
+// App gira todo 90° a la derecha (.force-landscape) cuando el celular está en vertical.
+// En ese giro, el eje x del dibujo apunta hacia abajo en la pantalla y su eje y hacia la izquierda.
+function toPadAxes(el, screenDx, screenDy) {
+  if (el.closest('.force-landscape')) return { x: screenDy, y: -screenDx }
+  return { x: screenDx, y: screenDy }
+}
+
 function AnalogJoystick() {
   const send = useGameStore((s) => s.send)
   const baseRef = useRef(null)
-  const touchIdRef = useRef(null)
-  const mouseDownRef = useRef(false)
+  const pointerIdRef = useRef(null)
   const lastVecRef = useRef({ jx: 0, jy: 0 })
   const heldDirsRef = useRef({ LEFT: false, RIGHT: false, UP: false, DOWN: false })
   const [knob, setKnob] = useState({ x: 0, y: 0, active: false, label: 'Joystick 360°' })
@@ -86,8 +92,9 @@ function AnalogJoystick() {
     const cy = rect.top + rect.height * 0.5
     const maxR = Math.max(18, rect.width * 0.34)
 
-    let dx = clientX - cx
-    let dy = clientY - cy
+    // La pantalla mide en sus propios ejes. Si App giró el control 90° (iPhone en vertical),
+    // hay que pasar el dedo a los ejes del dibujo, o el joystick va hacia donde no es.
+    let { x: dx, y: dy } = toPadAxes(el, clientX - cx, clientY - cy)
     const dist = Math.hypot(dx, dy)
     if (dist > maxR && dist > 0) {
       dx = (dx / dist) * maxR
@@ -117,71 +124,48 @@ function AnalogJoystick() {
   }
 
   const resetStick = () => {
-    touchIdRef.current = null
-    mouseDownRef.current = false
+    if (pointerIdRef.current === null) return
+    pointerIdRef.current = null
     lastVecRef.current = { jx: 0, jy: 0 }
     setKnob({ x: 0, y: 0, active: false, label: 'Joystick 360°' })
     send({ jx: 0, jy: 0 })
     syncDigitalDirs(0, 0)
   }
 
-  useEffect(() => {
-    const onMove = (e) => {
-      if (mouseDownRef.current) updateFromClientXY(e.clientX, e.clientY)
-    }
-    const onUp = () => {
-      if (mouseDownRef.current) resetStick()
-    }
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup', onUp)
-    return () => {
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseup', onUp)
-    }
-  })
+  // Los eventos de puntero cubren dedo y ratón. Con la captura, el dedo sigue
+  // moviendo el joystick aunque salga del círculo, sin depender de eventos de touch pasivos.
+  const isMine = (e) => e.pointerId === pointerIdRef.current
 
   return (
     <div className="flex shrink-0 flex-col items-center gap-[1cqh]">
       <div
         ref={baseRef}
-        onTouchStart={(e) => {
-          e.preventDefault()
-          if (touchIdRef.current === null && e.changedTouches.length > 0) {
-            const t = e.changedTouches[0]
-            touchIdRef.current = t.identifier
-            updateFromClientXY(t.clientX, t.clientY)
+        onPointerDown={(e) => {
+          if (pointerIdRef.current !== null) return
+          pointerIdRef.current = e.pointerId
+          try {
+            e.currentTarget.setPointerCapture(e.pointerId)
+          } catch {
+            // sin captura el joystick sigue funcionando mientras el dedo esté encima
           }
-        }}
-        onTouchMove={(e) => {
-          e.preventDefault()
-          for (let i = 0; i < e.changedTouches.length; i++) {
-            const t = e.changedTouches[i]
-            if (t.identifier === touchIdRef.current) {
-              updateFromClientXY(t.clientX, t.clientY)
-              break
-            }
-          }
-        }}
-        onTouchEnd={(e) => {
-          e.preventDefault()
-          for (let i = 0; i < e.changedTouches.length; i++) {
-            if (e.changedTouches[i].identifier === touchIdRef.current) {
-              resetStick()
-              break
-            }
-          }
-        }}
-        onTouchCancel={(e) => {
-          e.preventDefault()
-          resetStick()
-        }}
-        onMouseDown={(e) => {
-          e.preventDefault()
-          mouseDownRef.current = true
           updateFromClientXY(e.clientX, e.clientY)
         }}
+        onPointerMove={(e) => {
+          if (isMine(e)) updateFromClientXY(e.clientX, e.clientY)
+        }}
+        onPointerUp={(e) => {
+          if (isMine(e)) resetStick()
+        }}
+        onPointerCancel={(e) => {
+          if (isMine(e)) resetStick()
+        }}
+        onLostPointerCapture={(e) => {
+          if (isMine(e)) resetStick()
+        }}
+        onContextMenu={(e) => e.preventDefault()}
         className="relative flex items-center justify-center rounded-full select-none"
         style={{
+          WebkitTouchCallout: 'none',
           width: 'var(--dpad)',
           height: 'var(--dpad)',
           background: 'radial-gradient(circle, #282240 0%, #131020 78%)',

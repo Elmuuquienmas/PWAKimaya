@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { parseConnectionFromQr } from '../services/qr'
 
 export function ManualIpDialog({ onConnect, onClose }) {
   const [ip, setIp] = useState('')
@@ -7,6 +8,12 @@ export function ManualIpDialog({ onConnect, onClose }) {
     e.preventDefault()
     const value = ip.trim()
     if (!value) return
+    // Acepta la IP sola, la IP con puerto o la dirección completa que sale bajo el QR.
+    const parsed = parseConnectionFromQr(value)
+    if (parsed) {
+      onConnect(parsed.ip, parsed.port)
+      return
+    }
     const [host, port] = value.split(':')
     onConnect(host, port || '8080')
   }

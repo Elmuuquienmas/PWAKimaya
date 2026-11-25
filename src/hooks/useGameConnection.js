@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useGameStore } from '../store/gameStore'
+import { httpControlUrl, isPrivateIp, needsHttpControl } from '../services/qr'
 
 // Se usa una sola vez en App. Los botones mandan datos con `send` del store.
 export const useGameConnection = () => {
@@ -12,7 +13,12 @@ export const useGameConnection = () => {
     const params = new URLSearchParams(window.location.search)
     const ipParam = params.get('ip')
     if (ipParam) {
-      useGameStore.getState().setConnectionDetails(ipParam, params.get('port') || '8080')
+      const portParam = params.get('port') || '8080'
+      if (needsHttpControl(ipParam) && isPrivateIp(ipParam)) {
+        window.location.replace(httpControlUrl(ipParam, portParam))
+        return
+      }
+      useGameStore.getState().setConnectionDetails(ipParam, portParam)
     }
   }, [])
 
@@ -20,6 +26,12 @@ export const useGameConnection = () => {
     if (!ip) return
 
     const store = useGameStore.getState()
+
+    // Desde https el navegador no deja abrir ws://. Se avisa en pantalla y no se intenta.
+    if (needsHttpControl(ip)) {
+      store.setWsStatus('error')
+      return
+    }
     let closedByUs = false
     let retryTimer
     let ws

@@ -4,6 +4,7 @@ import { useGameStore } from '../store/gameStore'
 import { Gamepad } from '../components/Gamepad'
 import { CameraFeed } from '../components/CameraFeed'
 import { ManualIpDialog } from '../components/ManualIpDialog'
+import { httpControlUrl, isPrivateIp, needsHttpControl } from '../services/qr'
 
 export function ControllerPage() {
   const ip = useGameStore((s) => s.ip)
@@ -25,12 +26,25 @@ export function ControllerPage() {
   const connected = demoConnected || wsStatus === 'connected'
   const askName = wsStatus === 'connected' && confirmedName === null
 
-  const handleDetected = useCallback(
-    ({ ip, port }) => {
-      setScanning(false)
+  // Desde la app instalada (https) no se puede abrir ws://. Se abre la página http
+  // que sirve el juego en la misma red, y ahí sí se conecta.
+  const connectTo = useCallback(
+    (ip, port) => {
+      if (needsHttpControl(ip) && isPrivateIp(ip)) {
+        window.location.assign(httpControlUrl(ip, port))
+        return
+      }
       setConnectionDetails(ip, port)
     },
     [setConnectionDetails],
+  )
+
+  const handleDetected = useCallback(
+    ({ ip, port }) => {
+      setScanning(false)
+      connectTo(ip, port)
+    },
+    [connectTo],
   )
 
   const startScan = () => {
@@ -77,7 +91,7 @@ export function ControllerPage() {
           onClose={() => setManualOpen(false)}
           onConnect={(host, port) => {
             setManualOpen(false)
-            setConnectionDetails(host, port)
+            connectTo(host, port)
           }}
         />
       )}
